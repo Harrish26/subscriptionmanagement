@@ -71,3 +71,4 @@ class ProductVariant(Base, TimeStampedBase):
 
     def __repr__(self):
         return f"<ProductVariant id={self.id} name='{self.variant_name}' surcharge={self.price_surcharge}>"
+

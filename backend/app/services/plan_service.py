@@ -92,3 +92,4 @@ class PlanService:
         db.delete(plan)
         db.commit()
         return True
+

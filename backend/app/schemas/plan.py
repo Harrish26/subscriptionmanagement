@@ -47,3 +47,4 @@ class PlanRead(PlanBase):
 
     class Config:
         from_attributes = True
+

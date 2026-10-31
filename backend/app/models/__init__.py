@@ -11,6 +11,16 @@ from app.models.quotation import (
     QuotationLine, 
     QuotationStatus
 )
+from app.models.subscription import (
+    Subscription, 
+    SubscriptionLine, 
+    SubscriptionStatus
+)
+from app.models.invoice import (
+    Invoice, 
+    InvoiceLine, 
+    InvoiceStatus
+)
 
 __all__ = [
     "Base", 
@@ -26,5 +36,11 @@ __all__ = [
     "QuotationTemplateLine",
     "Quotation",
     "QuotationLine",
-    "QuotationStatus"
+    "QuotationStatus",
+    "Subscription",
+    "SubscriptionLine",
+    "SubscriptionStatus",
+    "Invoice",
+    "InvoiceLine",
+    "InvoiceStatus"
 ]

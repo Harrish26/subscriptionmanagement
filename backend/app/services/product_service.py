@@ -159,3 +159,4 @@ class ProductService:
         db.delete(variant)
         db.commit()
         return True
+

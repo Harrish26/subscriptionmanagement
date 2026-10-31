@@ -56,3 +56,4 @@ class Plan(Base, TimeStampedBase):
 
     def __repr__(self):
         return f"<Plan id={self.id} name='{self.name}' interval={self.billing_interval.value} cost={self.base_cost}>"
+

@@ -163,7 +163,7 @@ All passwords must satisfy:
 
 ## 🧪 Running Verification Tests
 
-SubscriptNova includes automated test suites to verify backend health, SQLite foreign key enforcement, financial Decimal math, password policy validation, multi-attribute variants, subscription plans, and the quotation engine:
+SubscriptNova includes automated test suites to verify backend health, SQLite foreign key enforcement, financial Decimal math, password policy validation, multi-attribute variants, subscription plans, quotation engine, subscription state machine, idempotent billing engine, and the time-travel simulator:
 
 ```bash
 # Test 1: Verify Core Setup, SQLite foreign keys, and Decimal balance precision
@@ -175,7 +175,10 @@ python backend/test_api_endpoints.py
 # Test 3: Phase 2 Full Verification Suite (Products, Multi-Attribute Variants, Plans, Quotation Templates & Offers)
 python backend/test_phase2.py
 
-# Test 4: Frontend production build test (React 19 + Tailwind CSS + Vite)
+# Test 4: Phase 3 Full Verification Suite (Subscription State Machine, Billing Engine, Idempotency, Simulator)
+python backend/test_phase3.py
+
+# Test 5: Frontend production build test (React 19 + Tailwind CSS + Vite)
 npm --prefix frontend run build
 ```
 
@@ -185,9 +188,41 @@ npm --prefix frontend run build
 
 * ✅ **Phase 1: Project Scaffolding & Dependencies Setup** (COMPLETED)
 * ✅ **Phase 2: Product Catalog, Multi-Attribute Variants, Plans & Quotation Engine** (COMPLETED)
-* ⏳ **Phase 3: Subscription State Machine & Idempotent Recurring Billing Engine**
+* ✅ **Phase 3: Subscription State Machine & Idempotent Recurring Billing Engine** (COMPLETED)
 * ⏳ **Phase 4: Dynamic Taxes & Discounts Rules, Invoicing & Payments Ledger**
 * ⏳ **Phase 5: Scikit-learn Customer Churn Predictor & Revenue Forecaster**
 * ⏳ **Phase 6: Multi-Role Portals (Admin/Staff Enterprise UI + Customer Self-Service)**
 * ⏳ **Phase 7: Billing Day Fast-Forward Simulator, Data Seeder & Demo Polish**
+
+---
+
+## 🔄 Phase 3 — Subscription State Machine & Billing Engine
+
+### Subscription Lifecycle
+
+```
+Draft → Quotation → Confirmed → Active → Closed
+                                  ↕ Pause/Resume
+                                  ↺ Renew
+```
+
+### API Endpoints (Phase 3)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/v1/subscriptions/` | List all subscriptions |
+| POST | `/api/v1/subscriptions/` | Create subscription manually |
+| POST | `/api/v1/subscriptions/from-quotation` | Convert quotation → subscription |
+| GET | `/api/v1/subscriptions/{id}` | Get subscription details |
+| POST | `/api/v1/subscriptions/{id}/transition` | Trigger state transition |
+| GET | `/api/v1/invoices/` | List all invoices |
+| GET | `/api/v1/invoices/{id}` | Get invoice with line items |
+| PUT | `/api/v1/invoices/{id}/status` | Update invoice status (e.g. mark paid) |
+| GET | `/api/v1/simulator/status` | Get real & simulated dates |
+| POST | `/api/v1/simulator/advance` | Advance simulated date by N days & run billing |
+| POST | `/api/v1/simulator/reset` | Reset simulated date to today |
+
+### Idempotency Guarantee
+
+Invoices carry a `UNIQUE` database constraint on `(subscription_id, billing_period_start, billing_period_end)`. Running the billing engine twice for the same period generates **zero** duplicate invoices.
 

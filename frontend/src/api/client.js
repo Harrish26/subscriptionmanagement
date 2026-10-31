@@ -188,6 +188,53 @@ class ApiClient {
   async updateQuotationStatus(id, status) {
     return this.put(`/quotations/${id}`, { status });
   }
+
+  // --- Subscriptions (Phase 3) ---
+
+  async getSubscriptions() {
+    return this.get('/subscriptions/');
+  }
+
+  async createSubscriptionFromQuotation(payload) {
+    return this.post('/subscriptions/from-quotation', payload);
+  }
+
+  async createSubscription(payload) {
+    return this.post('/subscriptions/', payload);
+  }
+
+  async transitionSubscription(id, action, notes = '') {
+    return this.post(`/subscriptions/${id}/transition`, { action, notes });
+  }
+
+  // --- Invoices (Phase 3) ---
+
+  async getInvoices(subscriptionId = null) {
+    const query = subscriptionId ? `?subscription_id=${subscriptionId}` : '';
+    return this.get(`/invoices/${query}`);
+  }
+
+  async getInvoice(id) {
+    return this.get(`/invoices/${id}`);
+  }
+
+  async updateInvoiceStatus(id, status) {
+    return this.put(`/invoices/${id}/status`, { status });
+  }
+
+  // --- Billing Simulator (Phase 3) ---
+
+  async getSimulatorStatus() {
+    return this.get('/simulator/status');
+  }
+
+  async advanceTime(days) {
+    return this.post('/simulator/advance', { days });
+  }
+
+  async resetSimulator() {
+    return this.post('/simulator/reset', {});
+  }
 }
 
 export const api = new ApiClient();

@@ -3,6 +3,9 @@ import ProductCatalogView from './components/ProductCatalogView';
 import SubscriptionPlansView from './components/SubscriptionPlansView';
 import QuotationTemplatesView from './components/QuotationTemplatesView';
 import QuotationEngineView from './components/QuotationEngineView';
+import SubscriptionListView from './components/SubscriptionListView';
+import InvoicesView from './components/InvoicesView';
+import BillingSimulatorView from './components/BillingSimulatorView';
 import HealthCheckBadge from './components/HealthCheckBadge';
 import AuthStatusCard from './components/AuthStatusCard';
 import { api } from './api/client';
@@ -18,7 +21,10 @@ import {
   Database,
   User,
   LogOut,
-  ChevronRight
+  ChevronRight,
+  RefreshCw,
+  Receipt,
+  Clock
 } from 'lucide-react';
 
 export default function App() {
@@ -57,6 +63,9 @@ export default function App() {
     { id: 'plans', label: 'Subscription Plans', icon: Calendar, badge: 'Phase 2' },
     { id: 'templates', label: 'Quotation Templates', icon: FileSpreadsheet, badge: 'Phase 2' },
     { id: 'quotations', label: 'Quotation Engine', icon: Briefcase, badge: 'Phase 2' },
+    { id: 'subscriptions', label: 'Subscriptions', icon: RefreshCw, badge: 'Phase 3' },
+    { id: 'invoices', label: 'Invoices & Billing', icon: Receipt, badge: 'Phase 3' },
+    { id: 'simulator', label: 'Billing Simulator', icon: Clock, badge: 'Phase 3' },
     { id: 'system', label: 'Diagnostics & Auth', icon: ShieldCheck, badge: 'Core' },
   ];
 
@@ -75,7 +84,7 @@ export default function App() {
                   SubscriptNova
                 </span>
                 <span className="text-[10px] font-mono uppercase bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded border border-indigo-500/30 font-semibold">
-                  Phase 2 Active
+                  Phase 3 Active
                 </span>
               </div>
               <p className="text-[11px] text-slate-400">Brightloop Software • Subscription & Recurring Billing</p>
@@ -147,16 +156,19 @@ export default function App() {
         {activeTab === 'plans' && <SubscriptionPlansView />}
         {activeTab === 'templates' && <QuotationTemplatesView />}
         {activeTab === 'quotations' && <QuotationEngineView />}
+        {activeTab === 'subscriptions' && <SubscriptionListView />}
+        {activeTab === 'invoices' && <InvoicesView />}
+        {activeTab === 'simulator' && <BillingSimulatorView />}
         
         {activeTab === 'system' && (
           <div className="space-y-6">
             <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-5">
               <h2 className="text-lg font-bold text-white flex items-center gap-2 mb-1">
                 <ShieldCheck className="w-5 h-5 text-indigo-400" />
-                Phase 1 & Phase 2 System Architecture Status
+                Phase 1, 2 & 3 System Architecture Status
               </h2>
               <p className="text-xs text-slate-400">
-                Verifying active foreign key constraints, Decimal precision, JWT authentication, and RBAC endpoints.
+                Verifying active foreign key constraints, Decimal precision, JWT authentication, RBAC endpoints, and Phase 3 billing engine.
               </p>
             </div>
 
@@ -170,7 +182,7 @@ export default function App() {
 
       {/* Footer */}
       <footer className="border-t border-slate-800/80 bg-slate-950 py-4 text-center text-xs text-slate-500">
-        SubscriptNova • AI-Powered Subscription & Recurring Billing Platform • Phase 2 Verified
+        SubscriptNova • AI-Powered Subscription & Recurring Billing Platform • Phase 3 Verified
       </footer>
     </div>
   );

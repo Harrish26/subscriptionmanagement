@@ -132,3 +132,4 @@ class QuotationRead(QuotationBase):
 
     class Config:
         from_attributes = True
+

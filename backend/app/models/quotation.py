@@ -168,3 +168,4 @@ class QuotationLine(Base, TimeStampedBase):
     quotation = relationship("Quotation", back_populates="lines")
     product = relationship("Product")
     variant = relationship("ProductVariant")
+

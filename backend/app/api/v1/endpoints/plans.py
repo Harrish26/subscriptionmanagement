@@ -85,3 +85,4 @@ def delete_plan(
         message=f"Plan {plan_id} deleted successfully.",
         data={"deleted_id": plan_id}
     )
+

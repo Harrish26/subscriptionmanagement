@@ -187,3 +187,4 @@ def update_quotation(
         message=f"Quotation {quote.quote_number} updated.",
         data=QuotationRead.model_validate(quote)
     )
+
