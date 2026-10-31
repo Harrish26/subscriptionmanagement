@@ -56,7 +56,6 @@ class ApiClient {
 
       return data;
     } catch (err) {
-      // Re-throw normalized error
       throw err;
     }
   }
@@ -73,7 +72,19 @@ class ApiClient {
     });
   }
 
-  // --- Core Endpoints ---
+  put(endpoint, body, headers = {}) {
+    return this.request(endpoint, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+      headers,
+    });
+  }
+
+  delete(endpoint, headers = {}) {
+    return this.request(endpoint, { method: 'DELETE', headers });
+  }
+
+  // --- Auth & Diagnostics ---
 
   async getHealth() {
     return this.get('/health');
@@ -95,11 +106,89 @@ class ApiClient {
     return this.get('/auth/me');
   }
 
+  async getUsers(role = null) {
+    const query = role ? `?role=${role}` : '';
+    return this.get(`/users/${query}`);
+  }
+
   logout() {
     this.setToken(null);
+  }
+
+  // --- Products & Multi-Attribute Variants ---
+
+  async getProducts(activeOnly = true) {
+    return this.get(`/products/?active_only=${activeOnly}`);
+  }
+
+  async createProduct(payload) {
+    return this.post('/products/', payload);
+  }
+
+  async updateProduct(id, payload) {
+    return this.put(`/products/${id}`, payload);
+  }
+
+  async deleteProduct(id) {
+    return this.delete(`/products/${id}`);
+  }
+
+  async addVariant(productId, payload) {
+    return this.post(`/products/${productId}/variants`, payload);
+  }
+
+  async deleteVariant(variantId) {
+    return this.delete(`/products/variants/${variantId}`);
+  }
+
+  // --- Subscription Plans ---
+
+  async getPlans(activeOnly = true) {
+    return this.get(`/plans/?active_only=${activeOnly}`);
+  }
+
+  async createPlan(payload) {
+    return this.post('/plans/', payload);
+  }
+
+  async updatePlan(id, payload) {
+    return this.put(`/plans/${id}`, payload);
+  }
+
+  async deletePlan(id) {
+    return this.delete(`/plans/${id}`);
+  }
+
+  // --- Quotation Templates & Quotations ---
+
+  async getQuotationTemplates() {
+    return this.get('/quotations/templates');
+  }
+
+  async createQuotationTemplate(payload) {
+    return this.post('/quotations/templates', payload);
+  }
+
+  async deleteQuotationTemplate(id) {
+    return this.delete(`/quotations/templates/${id}`);
+  }
+
+  async getQuotations() {
+    return this.get('/quotations/');
+  }
+
+  async createQuotation(payload) {
+    return this.post('/quotations/', payload);
+  }
+
+  async createQuotationFromTemplate(payload) {
+    return this.post('/quotations/from-template', payload);
+  }
+
+  async updateQuotationStatus(id, status) {
+    return this.put(`/quotations/${id}`, { status });
   }
 }
 
 export const api = new ApiClient();
 export default api;
-

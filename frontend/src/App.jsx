@@ -1,111 +1,177 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import ProductCatalogView from './components/ProductCatalogView';
+import SubscriptionPlansView from './components/SubscriptionPlansView';
+import QuotationTemplatesView from './components/QuotationTemplatesView';
+import QuotationEngineView from './components/QuotationEngineView';
 import HealthCheckBadge from './components/HealthCheckBadge';
 import AuthStatusCard from './components/AuthStatusCard';
-import { Layers, CheckCircle2, Cpu, Database, ShieldCheck, Zap } from 'lucide-react';
+import { api } from './api/client';
+import { 
+  Zap, 
+  Package, 
+  Calendar, 
+  FileSpreadsheet, 
+  Briefcase, 
+  ShieldCheck, 
+  Layers,
+  Cpu,
+  Database,
+  User,
+  LogOut,
+  ChevronRight
+} from 'lucide-react';
 
 export default function App() {
-  const requirements = [
-    { title: 'Decimal Precision', desc: 'All financial calculations use Decimal instead of float', done: true },
-    { title: 'Secure Passwords & JWT', desc: 'Bcrypt hashing, >8 chars policy, and HS256 JWT tokens', done: true },
-    { title: 'Role-Based Access Control', desc: 'Granular Admin, Staff, and Customer RBAC dependencies', done: true },
-    { title: 'Environment Config', desc: 'Decoupled settings via .env and python-dotenv', done: true },
-    { title: 'SQLite Foreign Keys', desc: 'PRAGMA foreign_keys=ON strictly enforced via engine event', done: true },
-    { title: 'Modular Architecture', desc: 'Clean separation: routers, models, schemas, and services', done: true },
-    { title: 'CORS & Frontend Client', desc: 'Configured CORSMiddleware and Fetch API client', done: true },
-    { title: 'Diagnostic Health Endpoint', desc: 'Live /api/v1/health reporting DB and FK status', done: true },
+  const [activeTab, setActiveTab] = useState('products');
+  const [currentUser, setCurrentUser] = useState(null);
+
+  const checkUserSession = async () => {
+    try {
+      const res = await api.getCurrentUser();
+      setCurrentUser(res?.data || null);
+    } catch {
+      setCurrentUser(null);
+    }
+  };
+
+  useEffect(() => {
+    checkUserSession();
+  }, []);
+
+  const quickLoginAsAdmin = async () => {
+    try {
+      await api.login('admin@brightloop.io', 'Admin@Brightloop2026!');
+      await checkUserSession();
+    } catch (err) {
+      console.error('Quick login failed', err);
+    }
+  };
+
+  const handleLogout = () => {
+    api.logout();
+    setCurrentUser(null);
+  };
+
+  const navItems = [
+    { id: 'products', label: 'Products & Variants', icon: Package, badge: 'Phase 2' },
+    { id: 'plans', label: 'Subscription Plans', icon: Calendar, badge: 'Phase 2' },
+    { id: 'templates', label: 'Quotation Templates', icon: FileSpreadsheet, badge: 'Phase 2' },
+    { id: 'quotations', label: 'Quotation Engine', icon: Briefcase, badge: 'Phase 2' },
+    { id: 'system', label: 'Diagnostics & Auth', icon: ShieldCheck, badge: 'Core' },
   ];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
-      {/* Top Navigation */}
-      <header className="border-b border-slate-800 bg-slate-900/60 backdrop-blur sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
+      {/* Top Navigation Bar */}
+      <header className="border-b border-slate-800 bg-slate-900/70 backdrop-blur sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/25">
               <Zap className="w-5 h-5 text-white" />
             </div>
             <div>
-              <span className="font-bold text-lg tracking-tight bg-gradient-to-r from-white via-indigo-100 to-indigo-300 bg-clip-text text-transparent">
-                SubscriptNova
-              </span>
-              <span className="ml-2 text-xs font-mono uppercase bg-indigo-500/10 text-indigo-400 px-2 py-0.5 rounded border border-indigo-500/20">
-                Phase 1 Active
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="font-extrabold text-lg tracking-tight bg-gradient-to-r from-white via-indigo-100 to-indigo-300 bg-clip-text text-transparent">
+                  SubscriptNova
+                </span>
+                <span className="text-[10px] font-mono uppercase bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded border border-indigo-500/30 font-semibold">
+                  Phase 2 Active
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400">Brightloop Software • Subscription & Recurring Billing</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 text-xs text-slate-400">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            System Online
+          {/* User Session Pill */}
+          <div className="flex items-center gap-3">
+            {currentUser ? (
+              <div className="flex items-center gap-2 bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800 text-xs">
+                <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span className="text-slate-300 font-medium">{currentUser.full_name}</span>
+                <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-semibold">
+                  {currentUser.role}
+                </span>
+                <button
+                  onClick={handleLogout}
+                  className="text-slate-500 hover:text-rose-400 ml-1"
+                  title="Logout"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={quickLoginAsAdmin}
+                className="flex items-center gap-1.5 text-xs text-indigo-300 hover:text-white bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 px-3 py-1.5 rounded-lg transition"
+              >
+                <User className="w-3.5 h-3.5" />
+                Quick Admin Login
+              </button>
+            )}
           </div>
+        </div>
+
+        {/* Sub-Header Navigation Tabs */}
+        <div className="max-w-7xl mx-auto px-4 overflow-x-auto flex gap-1 border-t border-slate-800/60 pt-1 pb-1">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-medium transition whitespace-nowrap ${
+                  isActive
+                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                <span>{item.label}</span>
+                <span
+                  className={`text-[9px] px-1.5 py-0.2 rounded font-mono ${
+                    isActive ? 'bg-indigo-800 text-indigo-100' : 'bg-slate-800 text-slate-400'
+                  }`}
+                >
+                  {item.badge}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </header>
 
-      {/* Hero / Overview Banner */}
-      <main className="max-w-6xl mx-auto px-4 py-8 flex-1 space-y-8 w-full">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-            AI-Powered Subscription Management & Recurring Billing
-          </h1>
-          <p className="mt-2 text-slate-400 text-sm max-w-3xl">
-            Unified subscription lifecycle backbone for Brightloop Software. Engineered with FastAPI, React, SQLite, SQLAlchemy, and Scikit-learn.
-          </p>
+      {/* Main Content Area */}
+      <main className="max-w-7xl mx-auto px-4 py-6 flex-1 w-full space-y-6">
+        {activeTab === 'products' && <ProductCatalogView />}
+        {activeTab === 'plans' && <SubscriptionPlansView />}
+        {activeTab === 'templates' && <QuotationTemplatesView />}
+        {activeTab === 'quotations' && <QuotationEngineView />}
+        
+        {activeTab === 'system' && (
+          <div className="space-y-6">
+            <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-5">
+              <h2 className="text-lg font-bold text-white flex items-center gap-2 mb-1">
+                <ShieldCheck className="w-5 h-5 text-indigo-400" />
+                Phase 1 & Phase 2 System Architecture Status
+              </h2>
+              <p className="text-xs text-slate-400">
+                Verifying active foreign key constraints, Decimal precision, JWT authentication, and RBAC endpoints.
+              </p>
+            </div>
 
-          <div className="flex flex-wrap gap-2 mt-4">
-            <span className="text-xs bg-slate-800 text-slate-300 px-2.5 py-1 rounded-md border border-slate-700/60 flex items-center gap-1.5">
-              <Cpu className="w-3.5 h-3.5 text-indigo-400" />
-              FastAPI + Uvicorn
-            </span>
-            <span className="text-xs bg-slate-800 text-slate-300 px-2.5 py-1 rounded-md border border-slate-700/60 flex items-center gap-1.5">
-              <Layers className="w-3.5 h-3.5 text-indigo-400" />
-              React + Vite + Tailwind
-            </span>
-            <span className="text-xs bg-slate-800 text-slate-300 px-2.5 py-1 rounded-md border border-slate-700/60 flex items-center gap-1.5">
-              <Database className="w-3.5 h-3.5 text-indigo-400" />
-              SQLite (FK Enforced)
-            </span>
-            <span className="text-xs bg-slate-800 text-slate-300 px-2.5 py-1 rounded-md border border-slate-700/60 flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />
-              JWT + Granular RBAC
-            </span>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <HealthCheckBadge />
+              <AuthStatusCard />
+            </div>
           </div>
-        </div>
-
-        {/* Live System Diagnostics Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <HealthCheckBadge />
-          <AuthStatusCard />
-        </div>
-
-        {/* Phase 1 Verification Checklist */}
-        <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Layers className="w-5 h-5 text-indigo-400" />
-            <h2 className="text-lg font-semibold text-white">Phase 1 Architecture Compliance Checklist</h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {requirements.map((req, i) => (
-              <div
-                key={i}
-                className="flex items-start gap-3 p-3 bg-slate-950/40 rounded-lg border border-slate-800/80"
-              >
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                <div>
-                  <h3 className="text-sm font-medium text-slate-200">{req.title}</h3>
-                  <p className="text-xs text-slate-400 mt-0.5">{req.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        )}
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-800/80 py-4 text-center text-xs text-slate-500">
-        SubscriptNova • Brightloop Billing System • Ready for Phase 2: Product Catalog & Quotations
+      <footer className="border-t border-slate-800/80 bg-slate-950 py-4 text-center text-xs text-slate-500">
+        SubscriptNova • AI-Powered Subscription & Recurring Billing Platform • Phase 2 Verified
       </footer>
     </div>
   );
 }
-
