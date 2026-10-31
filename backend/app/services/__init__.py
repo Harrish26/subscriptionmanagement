@@ -6,6 +6,10 @@ from app.services.quotation_service import QuotationService
 from app.services.subscription_service import SubscriptionService
 from app.services.billing_engine import BillingEngine
 from app.services.simulator_service import SimulatorService
+from app.services.tax_service import TaxService
+from app.services.discount_service import DiscountService
+from app.services.payment_service import PaymentService
+from app.services.finance_service import FinanceService
 
 __all__ = [
     "UserService",
@@ -14,5 +18,9 @@ __all__ = [
     "QuotationService",
     "SubscriptionService",
     "BillingEngine",
-    "SimulatorService"
+    "SimulatorService",
+    "TaxService",
+    "DiscountService",
+    "PaymentService",
+    "FinanceService"
 ]

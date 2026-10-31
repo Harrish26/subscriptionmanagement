@@ -108,6 +108,17 @@ class BillingEngine:
             issue_date = eval_date
             due_date = BillingEngine.calculate_due_date(issue_date, sub.payment_terms)
 
+            tax_total = sub.tax_total
+            tax_rate = Decimal("0.00")
+            net_base = sub.subtotal - sub.discount_total
+            if tax_total > Decimal("0.00") and net_base > Decimal("0.00"):
+                tax_rate = (tax_total * Decimal("100.00") / net_base).quantize(TWOPLACES, rounding=ROUND_HALF_UP)
+
+            final_total = sub.total_amount
+
+            # Assign initial status (UNPAID or OVERDUE if target date already passed due date)
+            inv_status = InvoiceStatus.OVERDUE if due_date < eval_date else InvoiceStatus.UNPAID
+
             invoice = Invoice(
                 invoice_number=inv_number,
                 subscription_id=sub.id,
@@ -116,13 +127,13 @@ class BillingEngine:
                 billing_period_end=period_end,
                 issue_date=issue_date,
                 due_date=due_date,
-                status=InvoiceStatus.CONFIRMED,
+                status=inv_status,
                 subtotal=sub.subtotal,
                 discount_total=sub.discount_total,
-                tax_total=sub.tax_total,
-                total_amount=sub.total_amount,
+                tax_total=tax_total,
+                total_amount=final_total,
                 amount_paid=Decimal("0.00"),
-                balance_due=sub.total_amount,
+                balance_due=final_total,
                 notes=f"Recurring billing cycle #{sub.current_billing_cycle + 1} ({sub.plan.billing_interval.value})"
             )
             db.add(invoice)
@@ -138,7 +149,7 @@ class BillingEngine:
                     quantity=s_line.quantity,
                     unit_price=s_line.unit_price,
                     discount_percent=s_line.discount_percent,
-                    tax_rate=Decimal("0.00"),
+                    tax_rate=tax_rate,
                     line_total=s_line.line_total
                 )
                 db.add(inv_line)

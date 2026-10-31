@@ -115,7 +115,13 @@ class SubscriptionService:
 
         subtotal = subtotal.quantize(TWOPLACES, rounding=ROUND_HALF_UP)
         discount_total = discount_total.quantize(TWOPLACES, rounding=ROUND_HALF_UP)
-        total_amount = (subtotal - discount_total).quantize(TWOPLACES, rounding=ROUND_HALF_UP)
+        
+        tax_total = Decimal("0.00")
+        if getattr(sub_in, "tax_rate", None) and sub_in.tax_rate > Decimal("0.00"):
+            net_base = max(Decimal("0.00"), subtotal - discount_total)
+            tax_total = (net_base * sub_in.tax_rate / Decimal("100.00")).quantize(TWOPLACES, rounding=ROUND_HALF_UP)
+
+        total_amount = ((subtotal - discount_total) + tax_total).quantize(TWOPLACES, rounding=ROUND_HALF_UP)
 
         subscription = Subscription(
             subscription_number=sub_number,
@@ -128,7 +134,7 @@ class SubscriptionService:
             payment_terms=sub_in.payment_terms,
             subtotal=subtotal,
             discount_total=discount_total,
-            tax_total=Decimal("0.00"),
+            tax_total=tax_total,
             total_amount=total_amount,
             notes=sub_in.notes
         )

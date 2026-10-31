@@ -9,7 +9,11 @@ from app.api.v1.endpoints import (
     quotations, 
     subscriptions, 
     invoices, 
-    simulator
+    simulator,
+    taxes,
+    discounts,
+    payments,
+    finance
 )
 
 api_router = APIRouter()
@@ -23,3 +27,7 @@ api_router.include_router(quotations.router, prefix="/quotations", tags=["Quotat
 api_router.include_router(subscriptions.router, prefix="/subscriptions", tags=["Subscriptions"])
 api_router.include_router(invoices.router, prefix="/invoices", tags=["Invoicing & Billing Ledger"])
 api_router.include_router(simulator.router, prefix="/simulator", tags=["Time-Travel Billing Simulator"])
+api_router.include_router(taxes.router, prefix="/taxes", tags=["Tax Management"])
+api_router.include_router(discounts.router, prefix="/discounts", tags=["Discount Management"])
+api_router.include_router(payments.router, prefix="/payments", tags=["Payment Management"])
+api_router.include_router(finance.router, prefix="/finance", tags=["Finance Dashboard & Analytics"])

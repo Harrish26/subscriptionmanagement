@@ -18,10 +18,12 @@ from app.models.base import TimeStampedBase
 
 class InvoiceStatus(str, enum.Enum):
     DRAFT = "draft"
-    CONFIRMED = "confirmed"
+    CONFIRMED = "confirmed"  # legacy alias for unpaid
+    UNPAID = "unpaid"
+    PARTIALLY_PAID = "partially_paid"
     PAID = "paid"
-    CANCELLED = "cancelled"
     OVERDUE = "overdue"
+    CANCELLED = "cancelled"
 
 class Invoice(Base, TimeStampedBase):
     """
@@ -85,6 +87,18 @@ class Invoice(Base, TimeStampedBase):
         "InvoiceLine", 
         back_populates="invoice", 
         cascade="all, delete-orphan"
+    )
+    payments = relationship(
+        "Payment", 
+        back_populates="invoice", 
+        cascade="all, delete-orphan",
+        order_by="Payment.id.desc()"
+    )
+    reminders = relationship(
+        "PaymentReminder", 
+        back_populates="invoice", 
+        cascade="all, delete-orphan",
+        order_by="PaymentReminder.id.desc()"
     )
 
     @property

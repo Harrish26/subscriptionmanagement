@@ -22,6 +22,18 @@ class InvoiceLineRead(BaseModel):
     class Config:
         from_attributes = True
 
+class InvoicePaymentBrief(BaseModel):
+    id: int
+    payment_number: str
+    amount: Decimal
+    payment_date: date
+    payment_method: str
+    transaction_reference: Optional[str] = None
+    notes: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
 class InvoiceStatusUpdate(BaseModel):
     status: InvoiceStatus
     notes: Optional[str] = None
@@ -48,6 +60,7 @@ class InvoiceRead(BaseModel):
     updated_at: datetime
     customer: Optional[CustomerBrief] = None
     lines: List[InvoiceLineRead] = []
+    payments: List[InvoicePaymentBrief] = []
 
     class Config:
         from_attributes = True

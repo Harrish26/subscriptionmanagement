@@ -21,6 +21,9 @@ from app.models.invoice import (
     InvoiceLine, 
     InvoiceStatus
 )
+from app.models.tax import Tax
+from app.models.discount import Discount, DiscountType, DiscountScope
+from app.models.payment import Payment, PaymentMethod, PaymentReminder
 
 __all__ = [
     "Base", 
@@ -42,5 +45,12 @@ __all__ = [
     "SubscriptionStatus",
     "Invoice",
     "InvoiceLine",
-    "InvoiceStatus"
+    "InvoiceStatus",
+    "Tax",
+    "Discount",
+    "DiscountType",
+    "DiscountScope",
+    "Payment",
+    "PaymentMethod",
+    "PaymentReminder"
 ]

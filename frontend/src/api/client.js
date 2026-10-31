@@ -235,6 +235,80 @@ class ApiClient {
   async resetSimulator() {
     return this.post('/simulator/reset', {});
   }
+
+  // --- Taxes (Phase 4) ---
+
+  async getTaxes(activeOnly = false) {
+    return this.get(`/taxes/?active_only=${activeOnly}`);
+  }
+
+  async createTax(payload) {
+    return this.post('/taxes/', payload);
+  }
+
+  async updateTax(id, payload) {
+    return this.put(`/taxes/${id}`, payload);
+  }
+
+  async deleteTax(id) {
+    return this.delete(`/taxes/${id}`);
+  }
+
+  // --- Discounts (Phase 4) ---
+
+  async getDiscounts(activeOnly = false) {
+    return this.get(`/discounts/?active_only=${activeOnly}`);
+  }
+
+  async createDiscount(payload) {
+    return this.post('/discounts/', payload);
+  }
+
+  async validateDiscount(payload) {
+    return this.post('/discounts/validate', payload);
+  }
+
+  async updateDiscount(id, payload) {
+    return this.put(`/discounts/${id}`, payload);
+  }
+
+  async deleteDiscount(id) {
+    return this.delete(`/discounts/${id}`);
+  }
+
+  // --- Payments & Reminders (Phase 4) ---
+
+  async getPayments(invoiceId = null) {
+    const query = invoiceId ? `?invoice_id=${invoiceId}` : '';
+    return this.get(`/payments/${query}`);
+  }
+
+  async recordPayment(payload) {
+    return this.post('/payments/', payload);
+  }
+
+  async getPayment(id) {
+    return this.get(`/payments/${id}`);
+  }
+
+  async sendPaymentReminder(payload) {
+    return this.post('/payments/reminders', payload);
+  }
+
+  async getPaymentReminders(invoiceId = null) {
+    const query = invoiceId ? `?invoice_id=${invoiceId}` : '';
+    return this.get(`/payments/reminders/list${query}`);
+  }
+
+  // --- Finance Dashboard (Phase 4) ---
+
+  async getFinanceDashboard() {
+    return this.get('/finance/dashboard');
+  }
+
+  async scanOverdueInvoices() {
+    return this.post('/finance/scan-overdue', {});
+  }
 }
 
 export const api = new ApiClient();

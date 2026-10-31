@@ -178,7 +178,10 @@ python backend/test_phase2.py
 # Test 4: Phase 3 Full Verification Suite (Subscription State Machine, Billing Engine, Idempotency, Simulator)
 python backend/test_phase3.py
 
-# Test 5: Frontend production build test (React 19 + Tailwind CSS + Vite)
+# Test 5: Phase 4 Full Verification Suite (Taxes, Discounts, Payments, Overdue, Finance Dashboard)
+python backend/test_phase4.py
+
+# Test 6: Frontend production build test (React 19 + Tailwind CSS + Vite)
 npm --prefix frontend run build
 ```
 
@@ -189,7 +192,7 @@ npm --prefix frontend run build
 * ✅ **Phase 1: Project Scaffolding & Dependencies Setup** (COMPLETED)
 * ✅ **Phase 2: Product Catalog, Multi-Attribute Variants, Plans & Quotation Engine** (COMPLETED)
 * ✅ **Phase 3: Subscription State Machine & Idempotent Recurring Billing Engine** (COMPLETED)
-* ⏳ **Phase 4: Dynamic Taxes & Discounts Rules, Invoicing & Payments Ledger**
+* ✅ **Phase 4: Dynamic Taxes & Discounts Rules, Invoicing & Payments Ledger** (COMPLETED)
 * ⏳ **Phase 5: Scikit-learn Customer Churn Predictor & Revenue Forecaster**
 * ⏳ **Phase 6: Multi-Role Portals (Admin/Staff Enterprise UI + Customer Self-Service)**
 * ⏳ **Phase 7: Billing Day Fast-Forward Simulator, Data Seeder & Demo Polish**
@@ -225,4 +228,36 @@ Draft → Quotation → Confirmed → Active → Closed
 ### Idempotency Guarantee
 
 Invoices carry a `UNIQUE` database constraint on `(subscription_id, billing_period_start, billing_period_end)`. Running the billing engine twice for the same period generates **zero** duplicate invoices.
+
+---
+
+## 💳 Phase 4 — Tax, Discounts, Invoicing & Payment Management
+
+### Key Capabilities
+
+1. **Tax Management**: Configurable tax percentages (GST, VAT, Sales Tax) with active toggles and system default tax rules.
+2. **Promotional Discounts**: Percentage-off and flat cash-off codes, protected by minimum purchase thresholds, start/expiry windows, and maximum usage quotas.
+3. **Multi-Method Payments**: Support for UPI, Credit/Debit Card, Bank Wire (NEFT/RTGS), and Cash. Partial and full payments automatically adjust invoice balances and transition statuses (`unpaid`, `partially_paid`, `paid`).
+4. **Overdue Recovery**: Automated past-due scanner flags delinquent invoices as `overdue` and logs customer payment reminders.
+5. **Finance Dashboard**: Real-time KPI summaries for total gross invoiced, settled collections, outstanding accounts receivable, and payment method distribution.
+
+### API Endpoints (Phase 4)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/v1/taxes/` | List all tax rates |
+| POST | `/api/v1/taxes/` | Configure new tax rate |
+| PUT | `/api/v1/taxes/{id}` | Update existing tax rate |
+| DELETE | `/api/v1/taxes/{id}` | Delete tax rate |
+| GET | `/api/v1/discounts/` | List promotional discount rules |
+| POST | `/api/v1/discounts/` | Create discount with thresholds & expiry |
+| POST | `/api/v1/discounts/validate` | Validate code against cart amount & scope |
+| DELETE | `/api/v1/discounts/{id}` | Remove discount rule |
+| GET | `/api/v1/payments/` | View payments ledger |
+| POST | `/api/v1/payments/` | Record partial or full payment |
+| POST | `/api/v1/payments/reminders` | Dispatch and log overdue payment reminder |
+| GET | `/api/v1/payments/reminders/list` | List reminder audit log |
+| GET | `/api/v1/finance/dashboard` | Finance dashboard KPIs & revenue summary |
+| POST | `/api/v1/finance/scan-overdue` | Scan and flag past-due invoices as overdue |
+
 

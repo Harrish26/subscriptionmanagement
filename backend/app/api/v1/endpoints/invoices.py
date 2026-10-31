@@ -25,7 +25,8 @@ def list_invoices(
     query = db.query(Invoice).options(
         joinedload(Invoice.customer),
         joinedload(Invoice.subscription),
-        joinedload(Invoice.lines)
+        joinedload(Invoice.lines),
+        joinedload(Invoice.payments)
     )
 
     if current_user.role == UserRole.CUSTOMER:
@@ -56,7 +57,8 @@ def get_invoice(
         .options(
             joinedload(Invoice.customer),
             joinedload(Invoice.subscription),
-            joinedload(Invoice.lines)
+            joinedload(Invoice.lines),
+            joinedload(Invoice.payments)
         )
         .filter(Invoice.id == invoice_id)
         .first()

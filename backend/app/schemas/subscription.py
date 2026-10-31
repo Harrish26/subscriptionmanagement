@@ -43,6 +43,7 @@ class SubscriptionBase(BaseModel):
     notes: Optional[str] = None
 
 class SubscriptionCreate(SubscriptionBase):
+    tax_rate: Optional[Decimal] = Field(default=None, ge=Decimal("0.00"), le=Decimal("100.00"))
     lines: List[SubscriptionLineCreate] = []
 
 class SubscriptionFromQuotationRequest(BaseModel):
