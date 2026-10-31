@@ -1,13 +1,13 @@
 """Finance Dashboard and Revenue Analytics API Endpoints."""
 from datetime import date
 from typing import Optional
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, require_staff
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.schemas.common import ApiResponse
-from app.schemas.finance import FinanceDashboardSummary
+from app.schemas.finance import FinanceDashboardSummary, AdminDashboardOverview
 from app.services.finance_service import FinanceService
 from app.services.payment_service import PaymentService
 
@@ -27,6 +27,25 @@ def get_finance_dashboard(
         success=True,
         message="Finance dashboard summary retrieved.",
         data=summary
+    )
+
+@router.get("/admin-overview", response_model=ApiResponse[AdminDashboardOverview], summary="Admin High-Level Operations Overview")
+def get_admin_operations_overview(
+    current_staff: User = Depends(require_staff),
+    db: Session = Depends(get_db)
+):
+    """
+    Staff/Admin: High-level operations overview for Admin Dashboard:
+    total customers, active subscriptions, total products, MRR, total invoices,
+    collected payments, outstanding payments, overdue invoices, and churn prediction summary.
+    """
+    if current_staff.role not in (UserRole.ADMIN, UserRole.STAFF):
+        raise HTTPException(status_code=403, detail="Staff role required for admin overview.")
+    overview = FinanceService.get_admin_overview(db)
+    return ApiResponse(
+        success=True,
+        message="Admin overview metrics loaded successfully.",
+        data=overview
     )
 
 @router.post("/scan-overdue", response_model=ApiResponse[dict], summary="Scan & Update Overdue Invoices")

@@ -123,3 +123,62 @@ class FinanceService:
             recent_invoices=[InvoiceRead.model_validate(i) for i in recent_invoices]
         )
 
+    @staticmethod
+    def get_admin_overview(db: Session, as_of_date: Optional[date] = None):
+        """Aggregates high-level admin metrics across customers, subscriptions, products, revenue, and churn."""
+        from app.models.user import Customer
+        from app.models.subscription import Subscription, SubscriptionStatus
+        from app.models.product import Product
+        from app.services.ml_service import MLService
+        from app.schemas.finance import ActivityEvent, AdminDashboardOverview
+
+        today = as_of_date or date.today()
+        summary = FinanceService.get_dashboard_summary(db, today)
+        churn_overview = MLService.get_churn_overview(db)
+        mrr_forecast = MLService.forecast_mrr(db)
+
+        total_customers = db.query(Customer).count()
+        active_subs_count = db.query(Subscription).filter(Subscription.status == SubscriptionStatus.ACTIVE).count()
+        total_products_count = db.query(Product).count()
+
+        # Build activity stream
+        activity: List[ActivityEvent] = []
+        for inv in summary.recent_invoices[:4]:
+            activity.append(ActivityEvent(
+                id=f"inv-{inv.id}",
+                type="invoice",
+                title=f"Invoice Generated: {inv.invoice_number}",
+                description=f"${inv.total_amount:,.2f} billed (Customer #{inv.customer_id})",
+                amount=inv.total_amount,
+                status=inv.status.value,
+                timestamp=inv.issue_date
+            ))
+        for pay in summary.recent_payments[:4]:
+            activity.append(ActivityEvent(
+                id=f"pay-{pay.id}",
+                type="payment",
+                title=f"Payment Received: {pay.payment_number}",
+                description=f"${pay.amount:,.2f} via {pay.payment_method.value.upper()}",
+                amount=pay.amount,
+                status="settled",
+                timestamp=pay.payment_date
+            ))
+
+        activity.sort(key=lambda x: x.timestamp, reverse=True)
+
+        return AdminDashboardOverview(
+            as_of_date=today,
+            total_customers=total_customers,
+            active_subscriptions=active_subs_count,
+            total_products=total_products_count,
+            current_mrr=mrr_forecast.current_mrr,
+            total_invoiced_amount=summary.total_invoiced_amount,
+            total_collected_amount=summary.total_collected_amount,
+            total_outstanding_amount=summary.total_outstanding_amount,
+            overdue_invoices_count=summary.overdue_invoices_count,
+            overdue_amount=summary.overdue_amount,
+            portfolio_churn_rate_pct=churn_overview.portfolio_churn_rate,
+            high_risk_customers_count=churn_overview.high_risk_count,
+            recent_activity=activity
+        )
+

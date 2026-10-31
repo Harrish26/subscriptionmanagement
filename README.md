@@ -293,5 +293,55 @@ Invoices carry a `UNIQUE` database constraint on `(subscription_id, billing_peri
 | GET | `/api/v1/ml/dashboard` | Single-trip consolidated AI Insights dashboard payload | Staff / Admin |
 | POST | `/api/v1/ml/retrain` | On-demand retraining trigger of Random Forest classifier | Staff / Admin |
 
+---
+
+## 🎨 Phase 6 — Frontend Integration & Enterprise UI Enhancement
+
+### Key Capabilities
+
+1. **Enterprise Admin Operations Dashboard**:
+   - Modern overview displaying 8 primary operational KPI cards: Total Customers, Active Subscriptions, Total Products, Normalized Monthly Recurring Revenue (MRR), Gross Invoices Generated, Collected Payments, Outstanding Receivables, and Delinquent Overdue Invoices.
+   - Live AI Churn Risk banner with active portfolio health score and high-risk account counter.
+   - Live operational audit stream tracing recent system transactions, payments, and subscriptions.
+
+2. **Role-Based Navigation & Sidebar**:
+   - Collapsible 14-item responsive sidebar dynamically tailored by user role (`Admin`, `Staff`, `Customer`):
+     - **Core Operations**: Dashboard, Customers, Products, Variants, Plans, Quotations.
+     - **Billing & Subscriptions**: Subscriptions, Invoices, Payments.
+     - **Finance & Rules**: Discounts, Tax Management.
+     - **Intelligence & Reports**: AI Analytics, Reports, Settings.
+   - Role-specific access isolation prevents unauthorized screens from rendering for Customer users.
+
+3. **Customer 360° Management & Directory**:
+   - Comprehensive customer directory with search by name/email/company and filtering by risk level (`Low`, `Medium`, `High`) and outstanding balance.
+   - Staff/Admin customer onboarding modal for provisioning new accounts with initial billing credit.
+   - Customer 360° Deep-Dive Drawer featuring tabbed inspection:
+     - **Overview**: Core profile metadata and billing summary.
+     - **Subscriptions**: Itemized history of all subscriptions with live status badges.
+     - **Invoices**: Chronological billing history with status indicators and payment balances.
+     - **Payments**: Complete audit log of all partial and full payments with transaction references.
+     - **AI Risk Diagnostics**: Real-time churn score, risk breakdown, and prescriptive retention recommendations.
+
+4. **Financial & Subscription Aging Reports**:
+   - Aging Analysis table bucketed into Current, 1–30 Days, 31–60 Days, and 60+ Days past-due debt.
+   - Payment method breakdown tracking gross settlements across UPI, Credit/Debit Card, Bank Wire, and Cash.
+   - Invoice lifecycle distribution tracking Draft, Unpaid, Partially Paid, Paid, and Overdue statuses.
+   - CSV export triggers for financial audits and customer accounts receivable records.
+
+5. **Evaluation Bench & System Settings**:
+   - One-click role switcher allowing instant toggling between `Admin`, `Staff`, and `Customer` perspectives to evaluate RBAC and multi-tenant isolation.
+   - Time-Travel Billing Simulator controls with +1 Day, +7 Days, and +30 Days fast-forward and reset buttons.
+   - System health diagnostics and API connectivity monitoring.
+
+### API Endpoints (Phase 6)
+
+| Method | Endpoint | Description | Access |
+|--------|----------|-------------|--------|
+| GET | `/api/v1/finance/admin-overview` | Consolidated operational KPIs & live activity stream | Staff / Admin |
+| GET | `/api/v1/users/customers/overview` | Enriched customer directory with financial telemetry & churn scores | Staff / Admin |
+| GET | `/api/v1/users/customers/{id}/full` | Customer 360° profile, subscriptions, invoices, payments & diagnostics | Staff / Admin / Own Customer |
+| POST | `/api/v1/users/customers` | Onboard customer directly via Staff/Admin portal | Staff / Admin |
+
+
 
 

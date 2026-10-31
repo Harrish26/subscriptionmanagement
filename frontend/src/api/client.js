@@ -336,6 +336,24 @@ class ApiClient {
   async retrainMLModels() {
     return this.post('/ml/retrain', {});
   }
+
+  // --- Phase 6: Admin Dashboard & Customer Management ---
+
+  async getAdminOverview() {
+    return this.get('/finance/admin-overview');
+  }
+
+  async getCustomersOverview() {
+    return this.get('/users/customers/overview');
+  }
+
+  async getCustomerFullDetail(customerId) {
+    return this.get(`/users/customers/${customerId}/full`);
+  }
+
+  async createCustomerAccount(payload) {
+    return this.post('/users/customers', payload);
+  }
 }
 
 export const api = new ApiClient();

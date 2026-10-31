@@ -13,7 +13,10 @@ from app.schemas.user import (
     UserUpdate, 
     UserRead, 
     CustomerProfileCreate, 
-    CustomerProfileRead
+    CustomerProfileRead,
+    CustomerCreateByStaff,
+    CustomerEnrichedRead,
+    CustomerFullDetailRead
 )
 from app.schemas.product import (
     ProductCreate, 
@@ -81,7 +84,11 @@ from app.schemas.payment import (
     PaymentReminderCreate,
     PaymentReminderRead
 )
-from app.schemas.finance import FinanceDashboardSummary
+from app.schemas.finance import (
+    FinanceDashboardSummary,
+    AdminDashboardOverview,
+    ActivityEvent
+)
 from app.schemas.ml import (
     CustomerChurnPrediction,
     ChurnOverview,
@@ -105,6 +112,9 @@ __all__ = [
     "UserRead",
     "CustomerProfileCreate",
     "CustomerProfileRead",
+    "CustomerCreateByStaff",
+    "CustomerEnrichedRead",
+    "CustomerFullDetailRead",
     "ProductCreate",
     "ProductUpdate",
     "ProductRead",
@@ -154,6 +164,8 @@ __all__ = [
     "PaymentReminderCreate",
     "PaymentReminderRead",
     "FinanceDashboardSummary",
+    "AdminDashboardOverview",
+    "ActivityEvent",
     "CustomerChurnPrediction",
     "ChurnOverview",
     "MRRPoint",

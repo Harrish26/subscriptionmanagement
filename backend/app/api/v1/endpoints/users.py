@@ -6,7 +6,13 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_user, get_db, require_admin, require_staff
 from app.models.user import User, UserRole
 from app.schemas.common import ApiResponse
-from app.schemas.user import UserRead, UserStaffCreate
+from app.schemas.user import (
+    UserRead, 
+    UserStaffCreate,
+    CustomerCreateByStaff,
+    CustomerEnrichedRead,
+    CustomerFullDetailRead
+)
 from app.services.user_service import UserService
 
 router = APIRouter()
@@ -48,6 +54,64 @@ def list_users(
         message="Users retrieved successfully.",
         data=[UserRead.model_validate(u) for u in users]
     )
+
+@router.get("/customers/overview", response_model=ApiResponse[List[CustomerEnrichedRead]], summary="Enriched Customers Directory")
+def list_customers_overview(
+    current_staff: User = Depends(require_staff),
+    db: Session = Depends(get_db)
+):
+    """Staff & Admin: Retrieve comprehensive customer directory enriched with churn predictions, spend, and balances."""
+    if current_staff.role not in (UserRole.ADMIN, UserRole.STAFF):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Staff role required to view customer directory.")
+    customers = UserService.list_customers_enriched(db)
+    return ApiResponse(
+        success=True,
+        message=f"Retrieved {len(customers)} customer profiles.",
+        data=customers
+    )
+
+@router.get("/customers/{customer_id}/full", response_model=ApiResponse[CustomerFullDetailRead], summary="Full Customer Detail")
+def get_customer_full_detail(
+    customer_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Staff/Admin or owning Customer: Deep-dive customer profile with subscriptions, invoices, and payments."""
+    if current_user.role == UserRole.CUSTOMER:
+        if not current_user.customer_profile or current_user.customer_profile.id != customer_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Customers may only inspect their own profile."
+            )
+
+    try:
+        detail = UserService.get_customer_full_detail(db, customer_id)
+        return ApiResponse(
+            success=True,
+            message="Customer profile details loaded.",
+            data=detail
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+@router.post("/customers", response_model=ApiResponse[dict], status_code=status.HTTP_201_CREATED, summary="Onboard New Customer")
+def create_customer_account(
+    cust_in: CustomerCreateByStaff,
+    current_staff: User = Depends(require_staff),
+    db: Session = Depends(get_db)
+):
+    """Staff & Admin: Onboard a new customer company with credentials and initial zero balance."""
+    if current_staff.role not in (UserRole.ADMIN, UserRole.STAFF):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Staff role required to onboard customers.")
+    try:
+        customer = UserService.create_customer_by_staff(db, cust_in)
+        return ApiResponse(
+            success=True,
+            message=f"Customer '{cust_in.full_name}' onboarded successfully.",
+            data={"customer_id": customer.id, "user_id": customer.user_id, "email": cust_in.email}
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 @router.get("/{user_id}", response_model=ApiResponse[UserRead])
 def get_user_by_id(
