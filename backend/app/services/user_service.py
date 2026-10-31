@@ -11,6 +11,7 @@ from app.schemas.user import (
     UserCreate, 
     UserStaffCreate,
     CustomerCreateByStaff,
+    CustomerUpdate,
     CustomerEnrichedRead,
     CustomerFullDetailRead
 )
@@ -171,6 +172,114 @@ class UserService:
         db.commit()
         db.refresh(customer)
         return customer
+
+    @staticmethod
+    def update_customer(db: Session, customer_id: int, cust_in: CustomerUpdate) -> Customer:
+        """Staff/Admin updates an existing customer and their associated user account."""
+        customer = db.query(Customer).filter(Customer.id == customer_id).first()
+        if not customer:
+            raise ValueError(f"Customer with ID {customer_id} not found.")
+
+        user = customer.user
+        if not user:
+            raise ValueError(f"Associated user account for customer {customer_id} not found.")
+
+        if cust_in.email:
+            new_email = cust_in.email.lower().strip()
+            if new_email != user.email:
+                existing = db.query(User).filter(User.email == new_email).first()
+                if existing:
+                    raise ValueError(f"Email '{new_email}' is already in use by another account.")
+                user.email = new_email
+
+        if cust_in.full_name is not None and cust_in.full_name.strip():
+            user.full_name = cust_in.full_name.strip()
+
+        if cust_in.password:
+            user.hashed_password = get_password_hash(cust_in.password)
+
+        if cust_in.company_name is not None:
+            customer.company_name = cust_in.company_name.strip()
+        if cust_in.billing_address is not None:
+            customer.billing_address = cust_in.billing_address.strip()
+        if cust_in.phone is not None:
+            customer.phone = cust_in.phone.strip()
+        if cust_in.tax_identifier is not None:
+            customer.tax_identifier = cust_in.tax_identifier.strip()
+        if cust_in.credit_balance is not None:
+            customer.credit_balance = cust_in.credit_balance
+
+        db.commit()
+        db.refresh(customer)
+        return customer
+
+    @staticmethod
+    def delete_customer(db: Session, customer_id: int) -> bool:
+        """Admin deletes a customer account and associated user."""
+        customer = db.query(Customer).filter(Customer.id == customer_id).first()
+        if not customer:
+            raise ValueError(f"Customer with ID {customer_id} not found.")
+        
+        user_to_delete = customer.user
+        db.delete(customer)
+        if user_to_delete:
+            db.delete(user_to_delete)
+        db.commit()
+        return True
+
+    @staticmethod
+    def create_demo_users_if_missing(db: Session):
+        """Ensures all 3 roles (Admin, Staff, Customer) have guaranteed working accounts for instant demo and evaluation."""
+        # 1. Admin
+        UserService.create_admin_user_if_missing(
+            db=db,
+            email="admin@brightloop.io",
+            password="Admin@Brightloop2026!",
+            full_name="Brightloop Admin"
+        )
+
+        # 2. Staff (staff@brightloop.io)
+        staff = UserService.get_by_email(db, "staff@brightloop.io")
+        if not staff:
+            UserService.create_staff_user(
+                db=db,
+                staff_in=UserStaffCreate(
+                    email="staff@brightloop.io",
+                    full_name="Operations Staff",
+                    password="Staff@Brightloop2026!"
+                )
+            )
+        else:
+            staff.hashed_password = get_password_hash("Staff@Brightloop2026!")
+            db.commit()
+
+        # 3. Customer (customer@brightloop.io)
+        cust = UserService.get_by_email(db, "customer@brightloop.io")
+        if not cust:
+            UserService.create_customer_user(
+                db=db,
+                user_in=UserCreate(
+                    email="customer@brightloop.io",
+                    full_name="Brightloop Demo Customer",
+                    password="Customer@Brightloop2026!",
+                    company_name="Brightloop Solutions"
+                )
+            )
+        else:
+            cust.hashed_password = get_password_hash("Customer@Brightloop2026!")
+            db.commit()
+
+        # 4. Standard testcustomer@example.com (guarantee CustomerPass2026! and Password123! can authenticate)
+        test_cust = UserService.get_by_email(db, "testcustomer@example.com")
+        if test_cust:
+            test_cust.hashed_password = get_password_hash("CustomerPass2026!")
+            db.commit()
+
+        return {
+            "admin": "admin@brightloop.io",
+            "staff": "staff@brightloop.io",
+            "customer": "customer@brightloop.io"
+        }
 
     @staticmethod
     def _build_single_customer_enriched(db: Session, cust: Customer) -> CustomerEnrichedRead:

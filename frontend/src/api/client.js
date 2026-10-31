@@ -354,6 +354,14 @@ class ApiClient {
   async createCustomerAccount(payload) {
     return this.post('/users/customers', payload);
   }
+
+  async updateCustomer(customerId, payload) {
+    return this.put(`/users/customers/${customerId}`, payload);
+  }
+
+  async deleteCustomer(customerId) {
+    return this.delete(`/users/customers/${customerId}`);
+  }
 }
 
 export const api = new ApiClient();

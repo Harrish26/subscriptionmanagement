@@ -80,6 +80,26 @@ class UserUpdate(BaseModel):
     full_name: Optional[str] = None
     is_active: Optional[bool] = None
 
+class CustomerUpdate(BaseModel):
+    """Payload for updating an existing customer account."""
+    full_name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    company_name: Optional[str] = None
+    billing_address: Optional[str] = None
+    phone: Optional[str] = None
+    tax_identifier: Optional[str] = None
+    credit_balance: Optional[Decimal] = None
+    password: Optional[str] = None
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, v: Optional[str]) -> Optional[str]:
+        if v:
+            is_valid, error_msg = validate_password_strength(v)
+            if not is_valid:
+                raise ValueError(error_msg)
+        return v
+
 class UserRead(UserBase):
     id: int
     is_active: bool

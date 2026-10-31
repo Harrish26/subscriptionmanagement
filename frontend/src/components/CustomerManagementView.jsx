@@ -20,7 +20,9 @@ import {
   TrendingUp,
   Activity,
   ShieldCheck,
-  UserCheck
+  UserCheck,
+  Pencil,
+  Trash2
 } from 'lucide-react';
 
 export default function CustomerManagementView({ onNavigate }) {
@@ -33,6 +35,7 @@ export default function CustomerManagementView({ onNavigate }) {
   
   // Modals
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [activeCustomerDetail, setActiveCustomerDetail] = useState(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'subscriptions' | 'invoices' | 'payments'
@@ -50,6 +53,20 @@ export default function CustomerManagementView({ onNavigate }) {
   });
   const [savingCustomer, setSavingCustomer] = useState(false);
 
+  // Edit state
+  const [editFormData, setEditFormData] = useState({
+    customer_id: null,
+    full_name: '',
+    email: '',
+    company_name: '',
+    billing_address: '',
+    phone: '',
+    tax_identifier: '',
+    credit_balance: 0,
+    password: ''
+  });
+  const [savingEdit, setSavingEdit] = useState(false);
+
   const loadCustomers = async () => {
     setLoading(true);
     setError(null);
@@ -58,7 +75,14 @@ export default function CustomerManagementView({ onNavigate }) {
       setCustomers(res?.data || []);
     } catch (err) {
       console.error('Failed to load customers:', err);
-      setError(err?.message || 'Failed to load customers directory.');
+      const isNetworkErr = err?.message?.includes('Failed to fetch') || err?.message?.includes('NetworkError');
+      if (isNetworkErr) {
+        setError('Cannot connect to backend API server at http://localhost:8000. Please ensure the backend server is running.');
+      } else if (err?.message?.includes('401') || err?.message?.includes('Unauthorized')) {
+        setError('Session expired or unauthorized. Please log in using the Admin or Staff credentials.');
+      } else {
+        setError(err?.message || 'Failed to load customers directory.');
+      }
     } finally {
       setLoading(false);
     }
@@ -111,6 +135,73 @@ export default function CustomerManagementView({ onNavigate }) {
       showToast(err?.message || 'Failed to load customer profile details.', 'error');
     } finally {
       setLoadingDetail(false);
+    }
+  };
+
+  const handleOpenEdit = (customer, e) => {
+    if (e) e.stopPropagation();
+    setEditFormData({
+      customer_id: customer.customer_id || customer.id,
+      full_name: customer.full_name || '',
+      email: customer.email || '',
+      company_name: customer.company_name || '',
+      billing_address: customer.billing_address || '',
+      phone: customer.phone || '',
+      tax_identifier: customer.tax_identifier || '',
+      credit_balance: customer.credit_balance || 0,
+      password: ''
+    });
+    setShowEditModal(true);
+  };
+
+  const handleUpdateCustomer = async (e) => {
+    e.preventDefault();
+    if (!editFormData.full_name || !editFormData.email) {
+      showToast('Please provide full name and email.', 'error');
+      return;
+    }
+    setSavingEdit(true);
+    try {
+      const payload = {
+        full_name: editFormData.full_name,
+        email: editFormData.email,
+        company_name: editFormData.company_name || null,
+        billing_address: editFormData.billing_address || null,
+        phone: editFormData.phone || null,
+        tax_identifier: editFormData.tax_identifier || null,
+        credit_balance: Number(editFormData.credit_balance) || 0
+      };
+      if (editFormData.password && editFormData.password.trim().length > 0) {
+        payload.password = editFormData.password.trim();
+      }
+      await api.updateCustomer(editFormData.customer_id, payload);
+      showToast(`Customer '${editFormData.full_name}' updated successfully.`, 'success');
+      setShowEditModal(false);
+      if (activeCustomerDetail && (activeCustomerDetail.profile.customer_id === editFormData.customer_id || activeCustomerDetail.profile.id === editFormData.customer_id)) {
+        await handleOpenDetail(editFormData.customer_id);
+      }
+      await loadCustomers();
+    } catch (err) {
+      showToast(err?.message || 'Failed to update customer.', 'error');
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const handleDeleteCustomer = async (customerId, customerName, e) => {
+    if (e) e.stopPropagation();
+    if (!window.confirm(`Are you sure you want to deactivate or remove customer "${customerName}"? This action will archive their record.`)) {
+      return;
+    }
+    try {
+      await api.deleteCustomer(customerId);
+      showToast(`Customer "${customerName}" removed successfully.`, 'success');
+      if (activeCustomerDetail && (activeCustomerDetail.profile.customer_id === customerId || activeCustomerDetail.profile.id === customerId)) {
+        setActiveCustomerDetail(null);
+      }
+      await loadCustomers();
+    } catch (err) {
+      showToast(err?.message || 'Failed to delete customer.', 'error');
     }
   };
 
@@ -353,16 +444,33 @@ export default function CustomerManagementView({ onNavigate }) {
 
                       {/* Action */}
                       <td className="py-3.5 px-4 text-right">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleOpenDetail(c.customer_id);
-                          }}
-                          className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 transition inline-flex items-center gap-1"
-                        >
-                          <span>360° Profile</span>
-                          <ChevronRight className="w-3 h-3" />
-                        </button>
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenDetail(c.customer_id);
+                            }}
+                            className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 transition inline-flex items-center gap-1"
+                            title="Inspect 360° Profile"
+                          >
+                            <span>360° Profile</span>
+                            <ChevronRight className="w-3 h-3" />
+                          </button>
+                          <button
+                            onClick={(e) => handleOpenEdit(c, e)}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-700 transition"
+                            title="Edit Customer Account"
+                          >
+                            <Pencil className="w-3.5 h-3.5 text-indigo-300" />
+                          </button>
+                          <button
+                            onClick={(e) => handleDeleteCustomer(c.customer_id, c.full_name, e)}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 bg-slate-800/80 hover:bg-rose-950/60 transition"
+                            title="Deactivate Customer Account"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -496,6 +604,140 @@ export default function CustomerManagementView({ onNavigate }) {
         </div>
       )}
 
+      {/* Modal: Edit Customer */}
+      {showEditModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl relative">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div className="flex items-center gap-2">
+                <Pencil className="w-4 h-4 text-indigo-400" />
+                <h3 className="text-base font-bold text-white">Edit Customer Account</h3>
+              </div>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateCustomer} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-medium text-slate-300">Full Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={editFormData.full_name}
+                    onChange={e => setEditFormData({ ...editFormData, full_name: e.target.value })}
+                    className="w-full px-3 py-1.5 rounded-lg bg-slate-950/60 border border-slate-800 text-xs text-white focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-medium text-slate-300">Email Address *</label>
+                  <input
+                    type="email"
+                    required
+                    value={editFormData.email}
+                    onChange={e => setEditFormData({ ...editFormData, email: e.target.value })}
+                    className="w-full px-3 py-1.5 rounded-lg bg-slate-950/60 border border-slate-800 text-xs text-white focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-medium text-slate-300">Company Name</label>
+                  <input
+                    type="text"
+                    placeholder="Legal Business Entity"
+                    value={editFormData.company_name}
+                    onChange={e => setEditFormData({ ...editFormData, company_name: e.target.value })}
+                    className="w-full px-3 py-1.5 rounded-lg bg-slate-950/60 border border-slate-800 text-xs text-white focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-medium text-slate-300">Phone</label>
+                  <input
+                    type="text"
+                    placeholder="+1 (555) 000-0000"
+                    value={editFormData.phone}
+                    onChange={e => setEditFormData({ ...editFormData, phone: e.target.value })}
+                    className="w-full px-3 py-1.5 rounded-lg bg-slate-950/60 border border-slate-800 text-xs text-white focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[11px] font-medium text-slate-300">Billing Address</label>
+                <input
+                  type="text"
+                  placeholder="Street, City, Postal Code, Country"
+                  value={editFormData.billing_address}
+                  onChange={e => setEditFormData({ ...editFormData, billing_address: e.target.value })}
+                  className="w-full px-3 py-1.5 rounded-lg bg-slate-950/60 border border-slate-800 text-xs text-white focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-medium text-slate-300">Tax Identifier</label>
+                  <input
+                    type="text"
+                    placeholder="GSTIN / VAT / EIN"
+                    value={editFormData.tax_identifier}
+                    onChange={e => setEditFormData({ ...editFormData, tax_identifier: e.target.value })}
+                    className="w-full px-3 py-1.5 rounded-lg bg-slate-950/60 border border-slate-800 text-xs text-white focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-medium text-slate-300">Credit Balance ($)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={editFormData.credit_balance}
+                    onChange={e => setEditFormData({ ...editFormData, credit_balance: e.target.value })}
+                    className="w-full px-3 py-1.5 rounded-lg bg-slate-950/60 border border-slate-800 text-xs text-white focus:outline-none focus:border-indigo-500 font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[11px] font-medium text-slate-300">Reset Password (leave blank to keep current)</label>
+                <input
+                  type="password"
+                  placeholder="New password if updating..."
+                  value={editFormData.password}
+                  onChange={e => setEditFormData({ ...editFormData, password: e.target.value })}
+                  className="w-full px-3 py-1.5 rounded-lg bg-slate-950/60 border border-slate-800 text-xs text-white focus:outline-none focus:border-indigo-500 font-mono"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-medium bg-slate-800 text-slate-300 hover:bg-slate-700 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingEdit}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition shadow-lg shadow-indigo-600/30 disabled:opacity-50"
+                >
+                  {savingEdit ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Modal / Drawer: Customer 360° Profile */}
       {activeCustomerDetail && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in">
@@ -522,12 +764,31 @@ export default function CustomerManagementView({ onNavigate }) {
                 </p>
               </div>
 
-              <button
-                onClick={() => setActiveCustomerDetail(null)}
-                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800"
-              >
-                ✕
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => handleOpenEdit({
+                    customer_id: activeCustomerDetail.profile.customer_id,
+                    full_name: activeCustomerDetail.profile.full_name,
+                    email: activeCustomerDetail.profile.email,
+                    company_name: activeCustomerDetail.profile.company_name,
+                    billing_address: activeCustomerDetail.profile.billing_address,
+                    phone: activeCustomerDetail.profile.phone,
+                    tax_identifier: activeCustomerDetail.profile.tax_identifier,
+                    credit_balance: activeCustomerDetail.profile.credit_balance
+                  })}
+                  className="px-2.5 py-1.5 rounded-xl text-xs font-medium bg-slate-800 text-indigo-300 hover:bg-slate-700 border border-slate-700 flex items-center gap-1.5 transition"
+                  title="Edit Customer Profile"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                  <span>Edit Profile</span>
+                </button>
+                <button
+                  onClick={() => setActiveCustomerDetail(null)}
+                  className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
 
             {/* Sub-Header Tabs */}

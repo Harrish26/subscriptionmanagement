@@ -197,3 +197,4 @@ sudo certbot --nginx -d subscriptnova.yourdomain.com
 * **Vitality Health Check**: `GET /api/v1/health`
 * **Finance Operations Overview**: `GET /api/v1/finance/admin-overview`
 * **AI Model Metrics & Retraining**: `POST /api/v1/ml/retrain`
+

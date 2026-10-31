@@ -144,13 +144,16 @@ SubscriptNova/
 
 ---
 
-## 🔐 Default Credentials & RBAC Roles
+## 🔐 Evaluation Credentials & RBAC Roles
 
-On application startup, SubscriptNova automatically bootstraps a default system administrator if no admin account exists:
+On application startup, SubscriptNova automatically seeds and verifies guaranteed demo accounts for all three RBAC roles:
 
-* **Role**: `admin`
-* **Email**: `admin@brightloop.io`
-* **Password**: `Admin@Brightloop2026!`
+| Role | Email | Password | Access Scope |
+| :--- | :--- | :--- | :--- |
+| **Administrator** | `admin@brightloop.io` | `Admin@Brightloop2026!` | Full platform administration, RBAC, customer management, delete/archive, finance, AI |
+| **Operations Staff** | `staff@brightloop.io` | `Staff@Brightloop2026!` | Catalog, variants, plans, quotations, customer onboarding, billing, invoicing |
+| **Customer Portal** | `customer@brightloop.io` | `Customer@Brightloop2026!` | Multi-tenant isolated portal (My Subscriptions, Invoices, Payment history, Account) |
+| **Legacy Demo** | `testcustomer@example.com` | `CustomerPass2026!` | Active customer with rich subscription and payment history |
 
 ### Password Strength Rule (Brightloop Compliance)
 All passwords must satisfy:
@@ -163,25 +166,22 @@ All passwords must satisfy:
 
 ## 🧪 Running Verification Tests
 
-SubscriptNova includes automated test suites to verify backend health, SQLite foreign key enforcement, financial Decimal math, password policy validation, multi-attribute variants, subscription plans, quotation engine, subscription state machine, idempotent billing engine, and the time-travel simulator:
+SubscriptNova includes automated test suites to verify backend health, SQLite foreign key enforcement, financial Decimal math, password policy validation, multi-attribute variants, subscription plans, quotation engine, subscription state machine, idempotent billing engine, AI forecasting, and end-to-end customer management:
 
 ```bash
 # Test 1: Verify Core Setup, SQLite foreign keys, and Decimal balance precision
 python backend/test_setup.py
 
-# Test 2: Full API router suite (Health, Register, Password Policy, Admin Login, RBAC Staff Creation, Password Reset)
-python backend/test_api_endpoints.py
+# Test 2: Authentication, Customer Creation, Edit, Self-Registration & RBAC Isolation Suite
+python backend/test_auth_and_customers.py
 
-# Test 3: Phase 2 Full Verification Suite (Products, Multi-Attribute Variants, Plans, Quotation Templates & Offers)
-python backend/test_phase2.py
+# Test 3: Phase 6 Full Verification Suite (Admin Dashboard, Customer 360, End-to-End Lifecycle)
+python backend/test_phase6.py
 
-# Test 4: Phase 3 Full Verification Suite (Subscription State Machine, Billing Engine, Idempotency, Simulator)
-python backend/test_phase3.py
+# Test 4: Phase 7 Master Verification, Security Audits & Latency Benchmarks (22/22 Tests)
+python backend/test_phase7.py
 
-# Test 5: Phase 4 Full Verification Suite (Taxes, Discounts, Payments, Overdue, Finance Dashboard)
-python backend/test_phase4.py
-
-# Test 6: Frontend production build test (React 19 + Tailwind CSS + Vite)
+# Test 5: Frontend production build test (React 19 + Tailwind CSS + Vite)
 npm --prefix frontend run build
 ```
 
@@ -194,8 +194,8 @@ npm --prefix frontend run build
 * ✅ **Phase 3: Subscription State Machine & Idempotent Recurring Billing Engine** (COMPLETED)
 * ✅ **Phase 4: Dynamic Taxes & Discounts Rules, Invoicing & Payments Ledger** (COMPLETED)
 * ✅ **Phase 5: Scikit-learn Customer Churn Predictor & Revenue Forecaster** (COMPLETED)
-* ⏳ **Phase 6: Multi-Role Portals (Admin/Staff Enterprise UI + Customer Self-Service)**
-* ⏳ **Phase 7: Billing Day Fast-Forward Simulator, Data Seeder & Demo Polish**
+* ✅ **Phase 6: Multi-Role Portals (Admin/Staff Enterprise UI + Customer Self-Service)** (COMPLETED)
+* ✅ **Phase 7: Billing Day Fast-Forward Simulator, Data Seeder & Demo Polish** (COMPLETED)
 
 ---
 

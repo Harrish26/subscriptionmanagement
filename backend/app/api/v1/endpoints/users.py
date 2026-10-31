@@ -10,6 +10,7 @@ from app.schemas.user import (
     UserRead, 
     UserStaffCreate,
     CustomerCreateByStaff,
+    CustomerUpdate,
     CustomerEnrichedRead,
     CustomerFullDetailRead
 )
@@ -112,6 +113,58 @@ def create_customer_account(
         )
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+@router.put("/customers/{customer_id}", response_model=ApiResponse[dict], summary="Update Customer Account")
+def update_customer_account(
+    customer_id: int,
+    cust_in: CustomerUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Staff/Admin or owning Customer: Updates customer profile and account details."""
+    if current_user.role == UserRole.CUSTOMER:
+        if not current_user.customer_profile or current_user.customer_profile.id != customer_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Customers may only update their own profile."
+            )
+        if cust_in.credit_balance is not None:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only staff or administrators can adjust credit balances."
+            )
+
+    try:
+        updated_cust = UserService.update_customer(db, customer_id, cust_in)
+        return ApiResponse(
+            success=True,
+            message=f"Customer #{customer_id} updated successfully.",
+            data={
+                "customer_id": updated_cust.id,
+                "full_name": updated_cust.user.full_name if updated_cust.user else "",
+                "email": updated_cust.user.email if updated_cust.user else "",
+                "company_name": updated_cust.company_name
+            }
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+@router.delete("/customers/{customer_id}", response_model=ApiResponse[dict], summary="Delete Customer Account")
+def delete_customer_account(
+    customer_id: int,
+    current_admin: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """Admin-only: Removes customer account and associated user."""
+    try:
+        UserService.delete_customer(db, customer_id)
+        return ApiResponse(
+            success=True,
+            message=f"Customer #{customer_id} removed successfully.",
+            data={"customer_id": customer_id}
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 @router.get("/{user_id}", response_model=ApiResponse[UserRead])
 def get_user_by_id(

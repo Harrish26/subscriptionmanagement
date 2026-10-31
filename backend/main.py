@@ -17,12 +17,7 @@ async def lifespan(app: FastAPI):
     
     db = SessionLocal()
     try:
-        UserService.create_admin_user_if_missing(
-            db=db,
-            email="admin@brightloop.io",
-            password="Admin@Brightloop2026!",
-            full_name="Brightloop Admin"
-        )
+        UserService.create_demo_users_if_missing(db=db)
     finally:
         db.close()
 
@@ -38,10 +33,11 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Configure CORS Middleware
+# Configure CORS Middleware (support both explicit origins and any local dev port regex)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
+    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -179,11 +179,11 @@ export default function SettingsView({ currentUser, onUserChange }) {
                 </span>
               </div>
               <p className="text-[11px] text-slate-400 mt-1">
-                testcustomer@example.com
+                customer@brightloop.io
               </p>
             </div>
             <button
-              onClick={() => handleRoleSwitch('testcustomer@example.com', 'CustomerPass123!', 'Customer')}
+              onClick={() => handleRoleSwitch('customer@brightloop.io', 'Customer@Brightloop2026!', 'Customer')}
               className="w-full py-2 rounded-xl text-xs font-semibold bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 transition"
             >
               Switch to Customer

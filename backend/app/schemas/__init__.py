@@ -15,6 +15,7 @@ from app.schemas.user import (
     CustomerProfileCreate, 
     CustomerProfileRead,
     CustomerCreateByStaff,
+    CustomerUpdate,
     CustomerEnrichedRead,
     CustomerFullDetailRead
 )

@@ -42,3 +42,4 @@ services:
 volumes:
   subscriptnova_data:
     name: subscriptnova_data
+

@@ -13,6 +13,7 @@ import AIInsightsDashboardView from './components/AIInsightsDashboardView';
 import ReportsView from './components/ReportsView';
 import SettingsView from './components/SettingsView';
 import BillingSimulatorView from './components/BillingSimulatorView';
+import AuthModal from './components/AuthModal';
 import { api } from './api/client';
 import {
   LayoutDashboard,
@@ -45,6 +46,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [currentUser, setCurrentUser] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const checkUserSession = async () => {
     try {
@@ -58,6 +60,7 @@ export default function App() {
         setCurrentUser(adminRes?.data || null);
       } catch {
         setCurrentUser(null);
+        setShowAuthModal(true);
       }
     }
   };
@@ -79,13 +82,14 @@ export default function App() {
       }
     } catch (err) {
       console.error('Role switch failed:', err);
+      setShowAuthModal(true);
     }
   };
 
   const handleLogout = () => {
     api.logout();
     setCurrentUser(null);
-    setActiveTab('dashboard');
+    setShowAuthModal(true);
   };
 
   const userRole = currentUser?.role || 'admin';
@@ -287,7 +291,7 @@ export default function App() {
           {/* Quick Role Switcher for Hackathon Judges & Evaluators */}
           <div className="flex items-center gap-3">
             <div className="hidden sm:flex items-center bg-slate-950/80 p-1 rounded-xl border border-slate-800 text-[11px]">
-              <span className="text-slate-500 px-2 font-mono uppercase text-[9px] font-bold">Demo RBAC:</span>
+              <span className="text-slate-500 px-2 font-mono uppercase text-[9px] font-bold">Role:</span>
               <button
                 onClick={() => handleRoleSwitch('admin@brightloop.io', 'Admin@Brightloop2026!')}
                 className={`px-2.5 py-1 rounded-lg font-medium transition ${
@@ -295,6 +299,7 @@ export default function App() {
                     ? 'bg-purple-600 text-white shadow'
                     : 'text-slate-400 hover:text-white'
                 }`}
+                title="Log in as Administrator"
               >
                 Admin
               </button>
@@ -305,18 +310,27 @@ export default function App() {
                     ? 'bg-blue-600 text-white shadow'
                     : 'text-slate-400 hover:text-white'
                 }`}
+                title="Log in as Staff Member"
               >
                 Staff
               </button>
               <button
-                onClick={() => handleRoleSwitch('testcustomer@example.com', 'CustomerPass123!')}
+                onClick={() => handleRoleSwitch('customer@brightloop.io', 'Customer@Brightloop2026!')}
                 className={`px-2.5 py-1 rounded-lg font-medium transition ${
                   userRole === 'customer'
                     ? 'bg-emerald-600 text-white shadow'
                     : 'text-slate-400 hover:text-white'
                 }`}
+                title="Log in as Customer"
               >
                 Customer
+              </button>
+              <button
+                onClick={() => setShowAuthModal(true)}
+                className="px-2 py-1 ml-1 rounded-lg text-slate-400 hover:text-indigo-300 font-medium transition"
+                title="Custom Login or Registration"
+              >
+                Custom Login
               </button>
             </div>
 
@@ -348,6 +362,19 @@ export default function App() {
           {activeTab === 'simulator' && <BillingSimulatorView />}
         </main>
       </div>
+
+      {/* Authentication & Registration Portal Modal */}
+      <AuthModal
+        isOpen={showAuthModal || !currentUser}
+        onLoginSuccess={(user) => {
+          setCurrentUser(user);
+          setShowAuthModal(false);
+          if (user?.role === 'customer') {
+            setActiveTab('subscriptions');
+          }
+        }}
+        onClose={currentUser ? () => setShowAuthModal(false) : null}
+      />
     </div>
   );
 }
