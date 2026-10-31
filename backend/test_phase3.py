@@ -111,6 +111,13 @@ def run_phase3_verification():
         print(f"[PASS] Subscription created: {sub.subscription_number} (State: {sub.status.value}, Total: ${sub.total_amount})")
         print(f"       Next billing date calculated: {sub.next_billing_date} (Monthly cadence verified)")
 
+        # Verify billing date math across all intervals: Daily, Weekly, Monthly, Yearly
+        assert SubscriptionService.calculate_next_billing_date(start_date, BillingInterval.DAILY) == start_date + timedelta(days=1)
+        assert SubscriptionService.calculate_next_billing_date(start_date, BillingInterval.WEEKLY) == start_date + timedelta(days=7)
+        assert SubscriptionService.calculate_next_billing_date(start_date, BillingInterval.MONTHLY) == start_date + timedelta(days=30)
+        assert SubscriptionService.calculate_next_billing_date(start_date, BillingInterval.YEARLY) == start_date + timedelta(days=365)
+        print("       Interval cadence math verified: Daily (+1d), Weekly (+7d), Monthly (+30d), Yearly (+365d)")
+
         # --------------------------------------------------------------------
         # 2. Strict State Machine Transitions & Plan Rules Enforcement
         # --------------------------------------------------------------------

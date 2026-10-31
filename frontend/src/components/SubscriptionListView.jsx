@@ -314,9 +314,16 @@ export default function SubscriptionListView() {
               <tbody className="divide-y divide-slate-800/60">
                 {filtered.map(sub => (
                   <tr key={sub.id} className="hover:bg-slate-800/30 transition">
-                    <td className="px-4 py-3 font-mono text-indigo-300 font-semibold text-xs">{sub.subscription_number}</td>
+                    <td className="px-4 py-3 font-mono text-indigo-300 font-semibold text-xs">
+                      <div>{sub.subscription_number}</div>
+                      {sub.customer && (
+                        <div className="text-[10px] text-slate-400 font-sans mt-0.5">
+                          {sub.customer.company_name || sub.customer.contact_name}
+                        </div>
+                      )}
+                    </td>
                     <td className="px-4 py-3"><StatusBadge status={sub.status} /></td>
-                    <td className="px-4 py-3 text-slate-300 text-xs">{sub.plan_name || '—'}</td>
+                    <td className="px-4 py-3 text-slate-300 text-xs">{sub.plan?.name || sub.plan_name || '—'}</td>
                     <td className="px-4 py-3 text-slate-400 text-xs">{sub.start_date || '—'}</td>
                     <td className="px-4 py-3 text-slate-300 text-xs">
                       {sub.next_billing_date
@@ -324,7 +331,7 @@ export default function SubscriptionListView() {
                         : '—'}
                     </td>
                     <td className="px-4 py-3 text-right text-emerald-400 font-mono font-semibold text-xs">{fmt(sub.total_amount)}</td>
-                    <td className="px-4 py-3 text-slate-400 text-xs text-center">{sub.billing_cycle_count ?? 0}</td>
+                    <td className="px-4 py-3 text-slate-400 text-xs text-center">{sub.current_billing_cycle ?? sub.billing_cycle_count ?? 0}</td>
                     <td className="px-4 py-3">
                       <div className="flex gap-1 flex-wrap">
                         {(TRANSITIONS[sub.status] || []).map(action => {
@@ -369,3 +376,4 @@ export default function SubscriptionListView() {
     </div>
   );
 }
+

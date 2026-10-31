@@ -87,6 +87,10 @@ class Invoice(Base, TimeStampedBase):
         cascade="all, delete-orphan"
     )
 
+    @property
+    def subscription_number(self):
+        return self.subscription.subscription_number if self.subscription else None
+
     def __repr__(self):
         return f"<Invoice {self.invoice_number} sub={self.subscription_id} total=${self.total_amount} status={self.status.value}>"
 

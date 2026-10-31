@@ -30,6 +30,7 @@ class InvoiceRead(BaseModel):
     id: int
     invoice_number: str
     subscription_id: int
+    subscription_number: Optional[str] = None
     customer_id: int
     billing_period_start: date
     billing_period_end: date

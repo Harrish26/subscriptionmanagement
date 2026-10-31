@@ -24,6 +24,7 @@ def list_invoices(
     """
     query = db.query(Invoice).options(
         joinedload(Invoice.customer),
+        joinedload(Invoice.subscription),
         joinedload(Invoice.lines)
     )
 
@@ -54,6 +55,7 @@ def get_invoice(
         db.query(Invoice)
         .options(
             joinedload(Invoice.customer),
+            joinedload(Invoice.subscription),
             joinedload(Invoice.lines)
         )
         .filter(Invoice.id == invoice_id)

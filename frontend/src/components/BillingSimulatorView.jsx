@@ -23,7 +23,13 @@ function StatCard({ icon: Icon, label, value, color = 'text-white', sub }) {
 function RunSummaryCard({ result }) {
   if (!result) return null;
 
-  const { invoices_generated, total_amount_billed, skipped_duplicates, auto_closed, errors, generated_invoices } = result;
+  const summary = result.billing_summary || result;
+  const invoices_generated = summary.invoices_generated ?? 0;
+  const total_amount_billed = summary.total_amount_billed ?? 0;
+  const skipped_duplicates = summary.skipped_duplicate_cycles ?? summary.skipped_duplicates ?? 0;
+  const auto_closed = summary.auto_closed_subscriptions ?? summary.auto_closed ?? 0;
+  const errors = summary.errors || result.errors || [];
+  const generated_invoices = result.generated_invoices || summary.generated_invoices || [];
 
   return (
     <div className="bg-slate-900/70 border border-indigo-600/40 rounded-xl p-5 space-y-4">
@@ -158,7 +164,7 @@ export default function BillingSimulatorView() {
     }
   };
 
-  const isSimulated = status && status.offset_days !== 0;
+  const isSimulated = status && ((status.days_offset ?? status.offset_days ?? 0) !== 0);
 
   return (
     <div className="space-y-5">
@@ -184,19 +190,19 @@ export default function BillingSimulatorView() {
           <div className="mt-4 flex flex-col sm:flex-row gap-3">
             <div className="flex-1 bg-slate-800/50 rounded-xl p-4 border border-slate-700">
               <p className="text-[11px] text-slate-400 uppercase tracking-wide mb-1">Real Date (Server)</p>
-              <p className="text-xl font-bold font-mono text-slate-100">{status.real_date}</p>
+              <p className="text-xl font-bold font-mono text-slate-100">{status.real_world_date || status.real_date}</p>
             </div>
             <div className={`flex-1 rounded-xl p-4 border ${isSimulated ? 'bg-indigo-900/30 border-indigo-600/50' : 'bg-slate-800/50 border-slate-700'}`}>
               <p className="text-[11px] text-slate-400 uppercase tracking-wide mb-1">
-                Simulated Date {isSimulated && <span className="text-indigo-400 ml-1">(+{status.offset_days}d offset)</span>}
+                Simulated Date {isSimulated && <span className="text-indigo-400 ml-1">(+{(status.days_offset ?? status.offset_days)}d offset)</span>}
               </p>
               <p className={`text-xl font-bold font-mono ${isSimulated ? 'text-indigo-300' : 'text-slate-100'}`}>
-                {status.simulated_date}
+                {status.current_simulated_date || status.simulated_date}
               </p>
             </div>
             <div className="flex-1 bg-slate-800/50 rounded-xl p-4 border border-slate-700">
               <p className="text-[11px] text-slate-400 uppercase tracking-wide mb-1">Active Subscriptions Due</p>
-              <p className="text-xl font-bold font-mono text-amber-400">{status.active_subscriptions_due ?? '—'}</p>
+              <p className="text-xl font-bold font-mono text-amber-400">{status.active_subscriptions_due_count ?? status.active_subscriptions_due ?? '0'}</p>
             </div>
           </div>
         )}
@@ -300,3 +306,4 @@ export default function BillingSimulatorView() {
     </div>
   );
 }
+

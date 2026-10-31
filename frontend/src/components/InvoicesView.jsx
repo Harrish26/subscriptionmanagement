@@ -263,7 +263,14 @@ export default function InvoicesView() {
               <tbody className="divide-y divide-slate-800/60">
                 {filtered.map(inv => (
                   <tr key={inv.id} className="hover:bg-slate-800/30 transition">
-                    <td className="px-4 py-3 font-mono text-indigo-300 font-semibold text-xs">{inv.invoice_number}</td>
+                    <td className="px-4 py-3 font-mono text-indigo-300 font-semibold text-xs">
+                      <div>{inv.invoice_number}</div>
+                      {inv.customer && (
+                        <div className="text-[10px] text-slate-400 font-sans mt-0.5">
+                          {inv.customer.company_name || inv.customer.contact_name}
+                        </div>
+                      )}
+                    </td>
                     <td className="px-4 py-3 text-slate-400 font-mono text-xs">{inv.subscription_number || `#${inv.subscription_id}`}</td>
                     <td className="px-4 py-3"><StatusBadge status={inv.status} /></td>
                     <td className="px-4 py-3 text-slate-400 text-xs">
@@ -307,3 +314,4 @@ export default function InvoicesView() {
     </div>
   );
 }
+
