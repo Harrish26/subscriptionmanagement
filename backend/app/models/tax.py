@@ -24,3 +24,4 @@ class Tax(Base, TimeStampedBase):
 
     def __repr__(self):
         return f"<Tax {self.name} rate={self.rate}% active={self.is_active}>"
+

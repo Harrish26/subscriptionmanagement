@@ -82,6 +82,14 @@ from app.schemas.payment import (
     PaymentReminderRead
 )
 from app.schemas.finance import FinanceDashboardSummary
+from app.schemas.ml import (
+    CustomerChurnPrediction,
+    ChurnOverview,
+    MRRPoint,
+    MRRForecastResponse,
+    AIInsightsDashboard,
+    RiskDriver
+)
 
 __all__ = [
     "ApiResponse",
@@ -145,5 +153,11 @@ __all__ = [
     "PaymentRead",
     "PaymentReminderCreate",
     "PaymentReminderRead",
-    "FinanceDashboardSummary"
+    "FinanceDashboardSummary",
+    "CustomerChurnPrediction",
+    "ChurnOverview",
+    "MRRPoint",
+    "MRRForecastResponse",
+    "AIInsightsDashboard",
+    "RiskDriver"
 ]

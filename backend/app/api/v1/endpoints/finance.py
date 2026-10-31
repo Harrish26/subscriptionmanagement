@@ -41,3 +41,4 @@ def scan_overdue_invoices(
         message=f"Scan complete. {len(overdue_list)} invoice(s) marked as OVERDUE.",
         data={"overdue_invoices_updated": len(overdue_list)}
     )
+

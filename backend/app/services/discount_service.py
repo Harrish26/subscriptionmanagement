@@ -170,3 +170,4 @@ class DiscountService:
         discount = DiscountService.get_by_id(db, discount_id)
         db.delete(discount)
         db.commit()
+

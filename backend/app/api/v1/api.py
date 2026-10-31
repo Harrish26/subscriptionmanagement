@@ -13,7 +13,8 @@ from app.api.v1.endpoints import (
     taxes,
     discounts,
     payments,
-    finance
+    finance,
+    ml
 )
 
 api_router = APIRouter()
@@ -31,3 +32,4 @@ api_router.include_router(taxes.router, prefix="/taxes", tags=["Tax Management"]
 api_router.include_router(discounts.router, prefix="/discounts", tags=["Discount Management"])
 api_router.include_router(payments.router, prefix="/payments", tags=["Payment Management"])
 api_router.include_router(finance.router, prefix="/finance", tags=["Finance Dashboard & Analytics"])
+api_router.include_router(ml.router, prefix="/ml", tags=["AI & Machine Learning Insights"])

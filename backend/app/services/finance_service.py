@@ -122,3 +122,4 @@ class FinanceService:
             recent_payments=[PaymentRead.model_validate(p) for p in recent_payments],
             recent_invoices=[InvoiceRead.model_validate(i) for i in recent_invoices]
         )
+

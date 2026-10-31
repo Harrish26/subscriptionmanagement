@@ -113,3 +113,4 @@ def delete_discount(
         message="Discount deleted successfully.",
         data=None
     )
+

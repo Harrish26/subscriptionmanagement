@@ -61,3 +61,4 @@ class DiscountValidateResponse(BaseModel):
     message: str
     discount_amount: Decimal = Decimal("0.00")
     discount: Optional[DiscountRead] = None
+

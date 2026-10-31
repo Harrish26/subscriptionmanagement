@@ -80,3 +80,4 @@ def delete_tax(
         message="Tax rate deleted successfully.",
         data=None
     )
+

@@ -68,3 +68,4 @@ class Discount(Base, TimeStampedBase):
 
     def __repr__(self):
         return f"<Discount {self.code} type={self.discount_type.value} value={self.value}>"
+

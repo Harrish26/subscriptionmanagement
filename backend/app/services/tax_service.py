@@ -100,3 +100,4 @@ class TaxService:
             return Decimal("0.00")
         tax_amt = (amount * rate) / Decimal("100.00")
         return tax_amt.quantize(TWOPLACES, rounding=ROUND_HALF_UP)
+

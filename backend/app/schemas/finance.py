@@ -18,3 +18,4 @@ class FinanceDashboardSummary(BaseModel):
     payment_methods_breakdown: Dict[str, Decimal]
     recent_payments: List[PaymentRead] = []
     recent_invoices: List[InvoiceRead] = []
+

@@ -309,6 +309,33 @@ class ApiClient {
   async scanOverdueInvoices() {
     return this.post('/finance/scan-overdue', {});
   }
+
+  // --- AI & Machine Learning Insights (Phase 5) ---
+
+  async getAIInsightsDashboard() {
+    return this.get('/ml/dashboard');
+  }
+
+  async getChurnOverview() {
+    return this.get('/ml/churn/overview');
+  }
+
+  async getChurnCustomers(riskTier = null) {
+    const query = riskTier ? `?risk_tier=${encodeURIComponent(riskTier)}` : '';
+    return this.get(`/ml/churn/customers${query}`);
+  }
+
+  async getCustomerChurn(customerId) {
+    return this.get(`/ml/churn/customer/${customerId}`);
+  }
+
+  async getMRRForecast() {
+    return this.get('/ml/mrr/forecast');
+  }
+
+  async retrainMLModels() {
+    return this.post('/ml/retrain', {});
+  }
 }
 
 export const api = new ApiClient();

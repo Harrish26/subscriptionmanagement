@@ -102,3 +102,4 @@ def list_reminders(
         message="Payment reminders retrieved.",
         data=[PaymentReminderRead.model_validate(r) for r in reminders]
     )
+

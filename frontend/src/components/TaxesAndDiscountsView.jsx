@@ -609,3 +609,4 @@ export default function TaxesAndDiscountsView() {
     </div>
   );
 }
+

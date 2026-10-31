@@ -28,3 +28,4 @@ class TaxRead(TaxBase):
 
     class Config:
         from_attributes = True
+

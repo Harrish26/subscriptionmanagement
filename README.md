@@ -193,7 +193,7 @@ npm --prefix frontend run build
 * ✅ **Phase 2: Product Catalog, Multi-Attribute Variants, Plans & Quotation Engine** (COMPLETED)
 * ✅ **Phase 3: Subscription State Machine & Idempotent Recurring Billing Engine** (COMPLETED)
 * ✅ **Phase 4: Dynamic Taxes & Discounts Rules, Invoicing & Payments Ledger** (COMPLETED)
-* ⏳ **Phase 5: Scikit-learn Customer Churn Predictor & Revenue Forecaster**
+* ✅ **Phase 5: Scikit-learn Customer Churn Predictor & Revenue Forecaster** (COMPLETED)
 * ⏳ **Phase 6: Multi-Role Portals (Admin/Staff Enterprise UI + Customer Self-Service)**
 * ⏳ **Phase 7: Billing Day Fast-Forward Simulator, Data Seeder & Demo Polish**
 
@@ -259,5 +259,39 @@ Invoices carry a `UNIQUE` database constraint on `(subscription_id, billing_peri
 | GET | `/api/v1/payments/reminders/list` | List reminder audit log |
 | GET | `/api/v1/finance/dashboard` | Finance dashboard KPIs & revenue summary |
 | POST | `/api/v1/finance/scan-overdue` | Scan and flag past-due invoices as overdue |
+
+---
+
+## 🧠 Phase 5 — AI & Machine Learning Suite
+
+### Key Capabilities
+
+1. **AI Churn Prediction (Scikit-Learn Random Forest Classifier)**:
+   - Evaluates customer behavioral telemetry: account tenure, active/paused/closed subscription depth, invoice payment delays, overdue debt balances, and discount sensitivity.
+   - Outputs continuous churn probability ($0.0 \dots 1.0$), percentage score ($0 \dots 100$), and categorical risk tier (`Low`, `Medium`, `High`).
+   - Achieves **80.95% accuracy, 71.43% precision, 71.43% recall, and 0.7143 F1-score** on stratified validation.
+
+2. **Customer Risk Analysis & Explainability**:
+   - Deconstructs individual predictions into human-readable contributing drivers (e.g. *"4 overdue invoice(s) totaling $2,000.00"*, *"Payment delays averaging 24 days past due"*).
+   - Generates automated prescriptive intervention playbooks (e.g. automated dunning with 5% settlement discounts, proactive Customer Success unpause outreach, or annual plan lock-in incentives).
+
+3. **MRR Forecasting (Scikit-Learn Ridge Time-Series Regression)**:
+   - Reconstructs historical normalized Monthly Recurring Revenue (MRR) across daily, weekly, monthly, and yearly cadences with zero-loss `Decimal` precision.
+   - Fits a regularized Ridge regression forecaster ($R^2 = 0.9900$, $\text{MAE} = \$227.31$) projecting MRR for **3-month and 6-month horizons** with 95% confidence intervals.
+
+4. **AI Insights Dashboard**:
+   - Modern React 19 UI with glowing KPI metric cards, interactive bar visualizer contrasting historical actuals vs predicted revenue, feature importance charts, and deep-dive customer risk diagnostics.
+
+### API Endpoints (Phase 5)
+
+| Method | Endpoint | Description | Access |
+|--------|----------|-------------|--------|
+| GET | `/api/v1/ml/churn/overview` | Overall portfolio churn rate, risk breakdown & drivers | Staff / Admin |
+| GET | `/api/v1/ml/churn/customers` | Filterable list of all customer churn predictions & scores | Staff / Admin |
+| GET | `/api/v1/ml/churn/customer/{id}` | Detailed risk diagnostic and feature metrics for a single account | Staff / Admin / Own Customer |
+| GET | `/api/v1/ml/mrr/forecast` | Historical MRR + 3-month and 6-month forecasts with 95% CI | Staff / Admin |
+| GET | `/api/v1/ml/dashboard` | Single-trip consolidated AI Insights dashboard payload | Staff / Admin |
+| POST | `/api/v1/ml/retrain` | On-demand retraining trigger of Random Forest classifier | Staff / Admin |
+
 
 

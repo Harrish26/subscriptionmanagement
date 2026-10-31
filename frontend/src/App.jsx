@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import AIInsightsDashboardView from './components/AIInsightsDashboardView';
 import ProductCatalogView from './components/ProductCatalogView';
 import SubscriptionPlansView from './components/SubscriptionPlansView';
 import QuotationTemplatesView from './components/QuotationTemplatesView';
@@ -30,11 +31,12 @@ import {
   Clock,
   TrendingUp,
   CreditCard,
-  Percent
+  Percent,
+  Brain
 } from 'lucide-react';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('finance');
+  const [activeTab, setActiveTab] = useState('ai_insights');
   const [currentUser, setCurrentUser] = useState(null);
 
   const checkUserSession = async () => {
@@ -65,6 +67,7 @@ export default function App() {
   };
 
   const navItems = [
+    { id: 'ai_insights', label: 'AI Insights (ML)', icon: Brain, badge: 'Phase 5' },
     { id: 'finance', label: 'Finance Dashboard', icon: TrendingUp, badge: 'Phase 4' },
     { id: 'payments', label: 'Payments Ledger', icon: CreditCard, badge: 'Phase 4' },
     { id: 'taxes_discounts', label: 'Taxes & Discounts', icon: Percent, badge: 'Phase 4' },
@@ -92,8 +95,8 @@ export default function App() {
                 <span className="font-extrabold text-lg tracking-tight bg-gradient-to-r from-white via-indigo-100 to-indigo-300 bg-clip-text text-transparent">
                   SubscriptNova
                 </span>
-                <span className="text-[10px] font-mono uppercase bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded border border-emerald-500/30 font-semibold">
-                  Phase 4 Active
+                <span className="text-[10px] font-mono uppercase bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded border border-indigo-500/30 font-semibold">
+                  Phase 5 Active
                 </span>
               </div>
               <p className="text-[11px] text-slate-400">Brightloop Software • Subscription & Recurring Billing</p>
@@ -161,6 +164,7 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="max-w-7xl mx-auto px-4 py-6 flex-1 w-full space-y-6">
+        {activeTab === 'ai_insights' && <AIInsightsDashboardView />}
         {activeTab === 'finance' && <FinanceDashboardView />}
         {activeTab === 'payments' && <PaymentsLedgerView />}
         {activeTab === 'taxes_discounts' && <TaxesAndDiscountsView />}
@@ -177,10 +181,10 @@ export default function App() {
             <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-5">
               <h2 className="text-lg font-bold text-white flex items-center gap-2 mb-1">
                 <ShieldCheck className="w-5 h-5 text-indigo-400" />
-                Phase 1, 2, 3 & 4 System Architecture Status
+                Phase 1, 2, 3, 4 & 5 System Architecture Status
               </h2>
               <p className="text-xs text-slate-400">
-                Verifying active foreign key constraints, Decimal precision, JWT authentication, RBAC endpoints, billing engine, and Phase 4 Tax, Discount, Invoicing & Payments ledger.
+                Verifying active foreign key constraints, Decimal precision, JWT authentication, RBAC endpoints, billing engine, Phase 4 Financial Ledger, and Phase 5 AI/ML Suite.
               </p>
             </div>
 
@@ -194,7 +198,7 @@ export default function App() {
 
       {/* Footer */}
       <footer className="border-t border-slate-800/80 bg-slate-950 py-4 text-center text-xs text-slate-500">
-        SubscriptNova • AI-Powered Subscription & Recurring Billing Platform • Phase 4 Verified
+        SubscriptNova • AI-Powered Subscription & Recurring Billing Platform • Phase 5 Verified
       </footer>
     </div>
   );

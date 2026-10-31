@@ -96,3 +96,4 @@ class PaymentReminder(Base, TimeStampedBase):
 
     def __repr__(self):
         return f"<PaymentReminder inv={self.invoice_id} amt_due=${self.amount_due} at={self.reminder_date}>"
+

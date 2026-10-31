@@ -51,3 +51,4 @@ class PaymentReminderRead(BaseModel):
 
     class Config:
         from_attributes = True
+

@@ -10,6 +10,7 @@ from app.services.tax_service import TaxService
 from app.services.discount_service import DiscountService
 from app.services.payment_service import PaymentService
 from app.services.finance_service import FinanceService
+from app.services.ml_service import MLService
 
 __all__ = [
     "UserService",
@@ -22,5 +23,6 @@ __all__ = [
     "TaxService",
     "DiscountService",
     "PaymentService",
-    "FinanceService"
+    "FinanceService",
+    "MLService"
 ]

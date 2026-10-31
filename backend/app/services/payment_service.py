@@ -214,3 +214,4 @@ class PaymentService:
         if customer_id:
             query = query.filter(PaymentReminder.customer_id == customer_id)
         return query.order_by(PaymentReminder.id.desc()).all()
+
