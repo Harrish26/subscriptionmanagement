@@ -1,0 +1,23 @@
+# Environment secrets
+.env
+.env.*
+
+# Python
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Frontend
+node_modules/
+dist/
+
+# Database
+*.db
+
+# IDE
+.vscode/
+.idea/
+
+# System
+.DS_Store
