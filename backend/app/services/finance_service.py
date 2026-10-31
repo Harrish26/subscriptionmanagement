@@ -18,17 +18,8 @@ class FinanceService:
     def get_dashboard_summary(db: Session, as_of_date: Optional[date] = None) -> FinanceDashboardSummary:
         today = as_of_date or date.today()
 
-        # Invoices query
-        all_invoices = (
-            db.query(Invoice)
-            .options(
-                joinedload(Invoice.customer),
-                joinedload(Invoice.lines),
-                joinedload(Invoice.payments),
-                joinedload(Invoice.subscription)
-            )
-            .all()
-        )
+        # High-performance query for all invoices without eager loading sub-collections across entire table
+        all_invoices = db.query(Invoice).all()
 
         total_invoiced = Decimal("0.00")
         total_outstanding = Decimal("0.00")
@@ -63,15 +54,8 @@ class FinanceService:
                     overdue_count += 1
                     overdue_amount += inv.balance_due
 
-        # Payments query
-        all_payments = (
-            db.query(Payment)
-            .options(
-                joinedload(Payment.customer),
-                joinedload(Payment.invoice)
-            )
-            .all()
-        )
+        # High-performance query for payments aggregate
+        all_payments = db.query(Payment).all()
 
         total_collected = Decimal("0.00")
         methods_breakdown: Dict[str, Decimal] = {

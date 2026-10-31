@@ -288,7 +288,289 @@ def seed_database():
                     )
                 )
 
+        # 7. Taxes
+        from app.models.tax import Tax
+        tax_gst = db.query(Tax).filter(Tax.name == "GST 18% (Standard)").first()
+        if not tax_gst:
+            tax_gst = Tax(
+                name="GST 18% (Standard)",
+                rate=Decimal("18.00"),
+                description="Standard Goods and Services Tax",
+                is_active=True,
+                is_default=True
+            )
+            db.add(tax_gst)
+        tax_vat = db.query(Tax).filter(Tax.name == "VAT 10% (Reduced)").first()
+        if not tax_vat:
+            tax_vat = Tax(
+                name="VAT 10% (Reduced)",
+                rate=Decimal("10.00"),
+                description="Reduced Value Added Tax for enterprise cloud services",
+                is_active=True,
+                is_default=False
+            )
+            db.add(tax_vat)
+        db.commit()
+
+        # 8. Promotional Discounts
+        from app.models.discount import Discount, DiscountType, DiscountScope
+        disc_save20 = db.query(Discount).filter(Discount.code == "SAVE20").first()
+        if not disc_save20:
+            disc_save20 = Discount(
+                code="SAVE20",
+                name="Spring 2026 SaaS Growth Incentive",
+                discount_type=DiscountType.PERCENTAGE,
+                value=Decimal("20.00"),
+                min_purchase_amount=Decimal("1000.00"),
+                start_date=today - timedelta(days=30),
+                expiry_date=today + timedelta(days=180),
+                max_uses=100,
+                used_count=12,
+                scope=DiscountScope.ALL,
+                is_active=True
+            )
+            db.add(disc_save20)
+        
+        disc_welcome = db.query(Discount).filter(Discount.code == "WELCOME100").first()
+        if not disc_welcome:
+            disc_welcome = Discount(
+                code="WELCOME100",
+                name="New Enterprise Onboarding Credit",
+                discount_type=DiscountType.FIXED,
+                value=Decimal("100.00"),
+                min_purchase_amount=Decimal("500.00"),
+                start_date=today - timedelta(days=30),
+                expiry_date=today + timedelta(days=365),
+                max_uses=500,
+                used_count=45,
+                scope=DiscountScope.SUBSCRIPTION,
+                is_active=True
+            )
+            db.add(disc_welcome)
+        db.commit()
+
+        # 9. Realistic Subscriptions (Active, Paused, Closed)
+        from app.models.subscription import Subscription, SubscriptionLine, SubscriptionStatus
+        
+        # Customer 1 (Apex): Active subscription
+        sub_active = db.query(Subscription).filter(Subscription.subscription_number == "SUB-DEMO-APEX-01").first()
+        if not sub_active and len(cust_objs) > 0 and len(created_plans) > 0:
+            sub_active = Subscription(
+                subscription_number="SUB-DEMO-APEX-01",
+                customer_id=cust_objs[0].id,
+                plan_id=created_plans[0].id,
+                status=SubscriptionStatus.ACTIVE,
+                start_date=today - timedelta(days=60),
+                next_billing_date=today + timedelta(days=30),
+                payment_terms="Net 30",
+                subtotal=Decimal("3520.00"),
+                discount_total=Decimal("176.00"),
+                tax_total=Decimal("601.92"),
+                total_amount=Decimal("3945.92"),
+                current_billing_cycle=2
+            )
+            db.add(sub_active)
+            db.flush()
+            db.add(SubscriptionLine(
+                subscription_id=sub_active.id,
+                product_id=core_prod.id,
+                variant_id=odoo_variant.id,
+                description="Core ERP Software - Odoo Enterprise Engine (Demo)",
+                quantity=2,
+                unit_price=Decimal("1760.00"),
+                discount_percent=Decimal("5.00"),
+                line_total=Decimal("3344.00")
+            ))
+            db.commit()
+
+        # Customer 2 (Nova Retailers): Paused subscription
+        sub_paused = db.query(Subscription).filter(Subscription.subscription_number == "SUB-DEMO-NOVA-01").first()
+        if not sub_paused and len(cust_objs) > 1 and len(created_plans) > 0:
+            sub_paused = Subscription(
+                subscription_number="SUB-DEMO-NOVA-01",
+                customer_id=cust_objs[1].id,
+                plan_id=created_plans[0].id,
+                status=SubscriptionStatus.PAUSED,
+                start_date=today - timedelta(days=45),
+                next_billing_date=today + timedelta(days=15),
+                payment_terms="Immediate",
+                subtotal=Decimal("1200.00"),
+                discount_total=Decimal("0.00"),
+                tax_total=Decimal("216.00"),
+                total_amount=Decimal("1416.00"),
+                current_billing_cycle=1
+            )
+            db.add(sub_paused)
+            db.flush()
+            db.add(SubscriptionLine(
+                subscription_id=sub_paused.id,
+                product_id=core_prod.id,
+                variant_id=None,
+                description="Brightloop Core Business Software (Standard Cloud)",
+                quantity=1,
+                unit_price=Decimal("1200.00"),
+                discount_percent=Decimal("0.00"),
+                line_total=Decimal("1200.00")
+            ))
+            db.commit()
+
+        # Customer 3 (Crestview): Closed subscription
+        sub_closed = db.query(Subscription).filter(Subscription.subscription_number == "SUB-DEMO-CREST-01").first()
+        if not sub_closed and len(cust_objs) > 2 and len(created_plans) > 2:
+            sub_closed = Subscription(
+                subscription_number="SUB-DEMO-CREST-01",
+                customer_id=cust_objs[2].id,
+                plan_id=created_plans[2].id, # Weekly sprint plan
+                status=SubscriptionStatus.CLOSED,
+                start_date=today - timedelta(days=90),
+                expiry_date=today - timedelta(days=10),
+                next_billing_date=today - timedelta(days=10),
+                payment_terms="Immediate",
+                subtotal=Decimal("480.00"),
+                discount_total=Decimal("0.00"),
+                tax_total=Decimal("86.40"),
+                total_amount=Decimal("566.40"),
+                current_billing_cycle=8
+            )
+            db.add(sub_closed)
+            db.flush()
+            db.commit()
+
+        # 10. Realistic Invoices & Payments (Paid, Partially Paid, Unpaid, Overdue)
+        from app.models.invoice import Invoice, InvoiceLine, InvoiceStatus
+        from app.models.payment import Payment, PaymentMethod, PaymentReminder
+
+        # Invoice 1: Fully Paid
+        inv_paid = db.query(Invoice).filter(Invoice.invoice_number == "INV-DEMO-PAID-01").first()
+        if not inv_paid and sub_active:
+            inv_paid = Invoice(
+                invoice_number="INV-DEMO-PAID-01",
+                subscription_id=sub_active.id,
+                customer_id=cust_objs[0].id,
+                billing_period_start=today - timedelta(days=60),
+                billing_period_end=today - timedelta(days=30),
+                issue_date=today - timedelta(days=60),
+                due_date=today - timedelta(days=30),
+                status=InvoiceStatus.PAID,
+                subtotal=Decimal("3520.00"),
+                discount_total=Decimal("176.00"),
+                tax_total=Decimal("601.92"),
+                total_amount=Decimal("3945.92"),
+                amount_paid=Decimal("3945.92"),
+                balance_due=Decimal("0.00"),
+                notes="Initial cycle payment completed in full via Bank Wire"
+            )
+            db.add(inv_paid)
+            db.flush()
+            db.add(Payment(
+                payment_number="PAY-DEMO-WIRE-01",
+                invoice_id=inv_paid.id,
+                customer_id=cust_objs[0].id,
+                amount=Decimal("3945.92"),
+                payment_date=today - timedelta(days=45),
+                payment_method=PaymentMethod.BANK_TRANSFER,
+                transaction_reference="WIRE-CITI-2026-0991",
+                notes="Bank Wire full settlement for invoice INV-DEMO-PAID-01"
+            ))
+            db.commit()
+
+        # Invoice 2: Partially Paid
+        inv_part = db.query(Invoice).filter(Invoice.invoice_number == "INV-DEMO-PART-01").first()
+        if not inv_part and sub_active:
+            inv_part = Invoice(
+                invoice_number="INV-DEMO-PART-01",
+                subscription_id=sub_active.id,
+                customer_id=cust_objs[0].id,
+                billing_period_start=today - timedelta(days=30),
+                billing_period_end=today,
+                issue_date=today - timedelta(days=30),
+                due_date=today + timedelta(days=15),
+                status=InvoiceStatus.PARTIALLY_PAID,
+                subtotal=Decimal("3520.00"),
+                discount_total=Decimal("176.00"),
+                tax_total=Decimal("601.92"),
+                total_amount=Decimal("3945.92"),
+                amount_paid=Decimal("2000.00"),
+                balance_due=Decimal("1945.92"),
+                notes="Partial payment installment recorded via UPI"
+            )
+            db.add(inv_part)
+            db.flush()
+            db.add(Payment(
+                payment_number="PAY-DEMO-UPI-01",
+                invoice_id=inv_part.id,
+                customer_id=cust_objs[0].id,
+                amount=Decimal("2000.00"),
+                payment_date=today - timedelta(days=10),
+                payment_method=PaymentMethod.UPI,
+                transaction_reference="UPI-HDFC-9928172",
+                notes="50% installment advance via UPI"
+            ))
+            db.commit()
+
+        # Invoice 3: Delinquent / Overdue
+        inv_overdue = db.query(Invoice).filter(Invoice.invoice_number == "INV-DEMO-OVERDUE-01").first()
+        if not inv_overdue and len(cust_objs) > 1 and sub_paused:
+            inv_overdue = Invoice(
+                invoice_number="INV-DEMO-OVERDUE-01",
+                subscription_id=sub_paused.id,
+                customer_id=cust_objs[1].id,
+                billing_period_start=today - timedelta(days=45),
+                billing_period_end=today - timedelta(days=15),
+                issue_date=today - timedelta(days=45),
+                due_date=today - timedelta(days=15),
+                status=InvoiceStatus.OVERDUE,
+                subtotal=Decimal("1200.00"),
+                discount_total=Decimal("0.00"),
+                tax_total=Decimal("216.00"),
+                total_amount=Decimal("1416.00"),
+                amount_paid=Decimal("0.00"),
+                balance_due=Decimal("1416.00"),
+                notes="Overdue past 15 days - Automated dunning triggered"
+            )
+            db.add(inv_overdue)
+            db.flush()
+            db.add(PaymentReminder(
+                invoice_id=inv_overdue.id,
+                customer_id=cust_objs[1].id,
+                reminder_channel="email",
+                due_date=inv_overdue.due_date,
+                amount_due=Decimal("1416.00"),
+                message="Automated reminder: Invoice INV-DEMO-OVERDUE-01 is past due. Please settle via portal."
+            ))
+            db.commit()
+
+        # Invoice 4: Current Unpaid
+        inv_unpaid = db.query(Invoice).filter(Invoice.invoice_number == "INV-DEMO-UNPAID-01").first()
+        if not inv_unpaid and len(cust_objs) > 2 and sub_closed:
+            inv_unpaid = Invoice(
+                invoice_number="INV-DEMO-UNPAID-01",
+                subscription_id=sub_closed.id,
+                customer_id=cust_objs[2].id,
+                billing_period_start=today,
+                billing_period_end=today + timedelta(days=30),
+                issue_date=today,
+                due_date=today + timedelta(days=30),
+                status=InvoiceStatus.UNPAID,
+                subtotal=Decimal("700.00"),
+                discount_total=Decimal("70.00"),
+                tax_total=Decimal("113.40"),
+                total_amount=Decimal("743.40"),
+                amount_paid=Decimal("0.00"),
+                balance_due=Decimal("743.40"),
+                notes="Current cycle invoice awaiting customer approval"
+            )
+            db.add(inv_unpaid)
+            db.commit()
+
         print("[SEED] Brightloop Software demo data populated successfully!")
+        print("\n=== Safe Demo Credentials for Evaluation ===")
+        print("  * Admin:    admin@brightloop.io              / Admin@Brightloop2026!")
+        print("  * Staff:    sarah.sales@brightloop.io        / StaffPassword2026!")
+        print("  * Customer: apex.billing@apexlogistics.com   / CustomerPass2026!")
+        print("  * Customer: contact@novaretail.com           / CustomerPass2026!")
+        print("  * Customer: admin@crestviewmed.com           / CustomerPass2026!")
+        print("=============================================\n")
     finally:
         db.close()
 

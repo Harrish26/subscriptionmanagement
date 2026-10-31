@@ -407,9 +407,9 @@ class MLService:
         return predictions
 
     @classmethod
-    def get_churn_overview(cls, db: Session) -> ChurnOverview:
+    def get_churn_overview(cls, db: Session, predictions: Optional[List[CustomerChurnPrediction]] = None) -> ChurnOverview:
         """Returns consolidated portfolio churn metrics, risk distributions, and drivers."""
-        preds = cls.get_all_customer_predictions(db)
+        preds = predictions if predictions is not None else cls.get_all_customer_predictions(db)
         total = len(preds)
 
         if total == 0:
@@ -629,11 +629,12 @@ class MLService:
 
     @classmethod
     def get_ai_insights_dashboard(cls, db: Session) -> AIInsightsDashboard:
-        """Consolidates churn diagnostics, MRR projections, and risk accounts in a single payload."""
+        """Consolidates churn diagnostics, MRR projections, and risk accounts in a single optimized payload."""
         sim_today = SimulatorService.get_current_simulated_date()
-        churn_overview = cls.get_churn_overview(db)
-        mrr_forecast = cls.forecast_mrr(db)
+        # Optimize by computing customer predictions once and reusing across portfolio diagnostics
         all_preds = cls.get_all_customer_predictions(db)
+        churn_overview = cls.get_churn_overview(db, predictions=all_preds)
+        mrr_forecast = cls.forecast_mrr(db)
         high_risk = [p for p in all_preds if p.risk_tier == "High"]
 
         return AIInsightsDashboard(

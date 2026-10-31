@@ -247,3 +247,4 @@ export default function SettingsView({ currentUser, onUserChange }) {
     </div>
   );
 }
+

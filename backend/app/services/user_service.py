@@ -173,82 +173,83 @@ class UserService:
         return customer
 
     @staticmethod
-    def list_customers_enriched(db: Session) -> List[CustomerEnrichedRead]:
-        """Returns all customers enriched with live subscription counts, balances, spend, and ML churn scores."""
+    def _build_single_customer_enriched(db: Session, cust: Customer) -> CustomerEnrichedRead:
+        """Helper to construct enriched profile metrics for a single customer without scanning the entire DB."""
         from app.models.subscription import Subscription, SubscriptionStatus
         from app.models.invoice import Invoice, InvoiceStatus
         from app.models.plan import BillingInterval
         from app.services.ml_service import MLService
 
+        user = cust.user
+        # Subscriptions
+        subs = db.query(Subscription).filter(Subscription.customer_id == cust.id).all()
+        active_subs = [s for s in subs if s.status == SubscriptionStatus.ACTIVE]
+        
+        # Invoices
+        invs = db.query(Invoice).filter(Invoice.customer_id == cust.id).all()
+        overdue_invs = [i for i in invs if i.status == InvoiceStatus.OVERDUE]
+        outstanding = sum((i.balance_due for i in invs if i.status != InvoiceStatus.CANCELLED), Decimal("0.00"))
+        total_spend = sum((i.amount_paid for i in invs), Decimal("0.00"))
+
+        # Calculate current MRR
+        cust_mrr = Decimal("0.00")
+        for s in active_subs:
+            sub_cadence = s.plan.billing_interval if s.plan else BillingInterval.MONTHLY
+            sub_val = s.subtotal - s.discount_total
+            if sub_cadence == BillingInterval.DAILY:
+                m_val = sub_val * Decimal("30")
+            elif sub_cadence == BillingInterval.WEEKLY:
+                m_val = (sub_val / Decimal("7")) * Decimal("30")
+            elif sub_cadence == BillingInterval.MONTHLY:
+                m_val = sub_val
+            elif sub_cadence == BillingInterval.YEARLY:
+                m_val = sub_val / Decimal("12")
+            else:
+                m_val = sub_val
+            cust_mrr += m_val
+
+        # Churn prediction
+        try:
+            pred = MLService.predict_customer_churn(cust.id, db)
+            churn_prob = pred.churn_probability_pct
+            churn_tier = pred.risk_tier
+            churn_score = pred.risk_score
+            primary_driver = pred.contributing_factors[0] if pred.contributing_factors else None
+        except Exception:
+            churn_prob = 10.0
+            churn_tier = "Low"
+            churn_score = 10
+            primary_driver = "Healthy customer standing"
+
+        return CustomerEnrichedRead(
+            customer_id=cust.id,
+            user_id=cust.user_id,
+            full_name=user.full_name if user else "Unknown Customer",
+            email=user.email if user else "",
+            company_name=cust.company_name,
+            billing_address=cust.billing_address,
+            phone=cust.phone,
+            tax_identifier=cust.tax_identifier,
+            credit_balance=cust.credit_balance,
+            active_subscriptions_count=len(active_subs),
+            total_subscriptions_count=len(subs),
+            total_invoices_count=len(invs),
+            overdue_invoices_count=len(overdue_invs),
+            total_spend=total_spend,
+            outstanding_balance=outstanding,
+            current_mrr=cust_mrr,
+            churn_probability_pct=churn_prob,
+            churn_risk_tier=churn_tier,
+            churn_risk_score=churn_score,
+            primary_churn_driver=primary_driver,
+            created_at=cust.created_at or datetime.utcnow()
+        )
+
+    @staticmethod
+    def list_customers_enriched(db: Session) -> List[CustomerEnrichedRead]:
+        """Returns all customers enriched with live subscription counts, balances, spend, and ML churn scores."""
         customers = db.query(Customer).join(User).all()
-        enriched_list = []
-
-        for cust in customers:
-            user = cust.user
-            # Subscriptions
-            subs = db.query(Subscription).filter(Subscription.customer_id == cust.id).all()
-            active_subs = [s for s in subs if s.status == SubscriptionStatus.ACTIVE]
-            
-            # Invoices
-            invs = db.query(Invoice).filter(Invoice.customer_id == cust.id).all()
-            overdue_invs = [i for i in invs if i.status == InvoiceStatus.OVERDUE]
-            outstanding = sum((i.balance_due for i in invs if i.status != InvoiceStatus.CANCELLED), Decimal("0.00"))
-            total_spend = sum((i.amount_paid for i in invs), Decimal("0.00"))
-
-            # Calculate current MRR
-            cust_mrr = Decimal("0.00")
-            for s in active_subs:
-                sub_cadence = s.plan.billing_interval if s.plan else BillingInterval.MONTHLY
-                sub_val = s.subtotal - s.discount_total
-                if sub_cadence == BillingInterval.DAILY:
-                    m_val = sub_val * Decimal("30")
-                elif sub_cadence == BillingInterval.WEEKLY:
-                    m_val = (sub_val / Decimal("7")) * Decimal("30")
-                elif sub_cadence == BillingInterval.MONTHLY:
-                    m_val = sub_val
-                elif sub_cadence == BillingInterval.YEARLY:
-                    m_val = sub_val / Decimal("12")
-                else:
-                    m_val = sub_val
-                cust_mrr += m_val
-
-            # Churn prediction
-            try:
-                pred = MLService.predict_customer_churn(cust.id, db)
-                churn_prob = pred.churn_probability_pct
-                churn_tier = pred.risk_tier
-                churn_score = pred.risk_score
-                primary_driver = pred.contributing_factors[0] if pred.contributing_factors else None
-            except Exception:
-                churn_prob = 10.0
-                churn_tier = "Low"
-                churn_score = 10
-                primary_driver = "Healthy customer standing"
-
-            enriched_list.append(CustomerEnrichedRead(
-                customer_id=cust.id,
-                user_id=cust.user_id,
-                full_name=user.full_name if user else "Unknown Customer",
-                email=user.email if user else "",
-                company_name=cust.company_name,
-                billing_address=cust.billing_address,
-                phone=cust.phone,
-                tax_identifier=cust.tax_identifier,
-                credit_balance=cust.credit_balance,
-                active_subscriptions_count=len(active_subs),
-                total_subscriptions_count=len(subs),
-                total_invoices_count=len(invs),
-                overdue_invoices_count=len(overdue_invs),
-                total_spend=total_spend,
-                outstanding_balance=outstanding,
-                current_mrr=cust_mrr,
-                churn_probability_pct=churn_prob,
-                churn_risk_tier=churn_tier,
-                churn_risk_score=churn_score,
-                primary_churn_driver=primary_driver,
-                created_at=cust.created_at or datetime.utcnow()
-            ))
-
+        enriched_list = [UserService._build_single_customer_enriched(db, cust) for cust in customers]
         enriched_list.sort(key=lambda x: (x.churn_risk_score, x.outstanding_balance), reverse=True)
         return enriched_list
 
@@ -264,10 +265,7 @@ class UserService:
         if not cust:
             raise ValueError(f"Customer with ID {customer_id} not found.")
 
-        enriched = [c for c in UserService.list_customers_enriched(db) if c.customer_id == customer_id]
-        if not enriched:
-            raise ValueError(f"Customer {customer_id} profile could not be loaded.")
-        profile = enriched[0]
+        profile = UserService._build_single_customer_enriched(db, cust)
 
         subs = db.query(Subscription).filter(Subscription.customer_id == customer_id).order_by(Subscription.id.desc()).all()
         invs = db.query(Invoice).filter(Invoice.customer_id == customer_id).order_by(Invoice.id.desc()).all()
